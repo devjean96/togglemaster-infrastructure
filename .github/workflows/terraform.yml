@@ -26,7 +26,6 @@ env:
   TF_INPUT: false
   AWS_REGION: us-east-1
   AWS_DEFAULT_REGION: us-east-1
-  TF_VAR_lab_role_arn: ${{ vars.LAB_ROLE_ARN }}
   TF_VAR_eks_public_access_cidrs: ${{ vars.EKS_PUBLIC_ACCESS_CIDRS || '["0.0.0.0/0"]' }}
 
 jobs:
@@ -54,6 +53,21 @@ jobs:
 
       - name: Verify AWS identity
         run: aws sts get-caller-identity
+
+      - name: Configure AWS Academy LabRole
+        env:
+          CONFIGURED_LAB_ROLE_ARN: ${{ vars.LAB_ROLE_ARN }}
+        shell: bash
+        run: |
+          account_id="$(aws sts get-caller-identity --query Account --output text)"
+          lab_role_arn="${CONFIGURED_LAB_ROLE_ARN:-arn:aws:iam::$account_id:role/LabRole}"
+
+          if [[ ! "$lab_role_arn" =~ ^arn:aws[a-z-]*:iam::[0-9]{12}:role/LabRole$ ]]; then
+            echo "::error::LAB_ROLE_ARN must reference the AWS Academy LabRole."
+            exit 1
+          fi
+
+          echo "TF_VAR_lab_role_arn=$lab_role_arn" >> "$GITHUB_ENV"
 
       - name: Set database secrets
         shell: bash
@@ -113,6 +127,21 @@ jobs:
 
       - name: Verify AWS identity
         run: aws sts get-caller-identity
+
+      - name: Configure AWS Academy LabRole
+        env:
+          CONFIGURED_LAB_ROLE_ARN: ${{ vars.LAB_ROLE_ARN }}
+        shell: bash
+        run: |
+          account_id="$(aws sts get-caller-identity --query Account --output text)"
+          lab_role_arn="${CONFIGURED_LAB_ROLE_ARN:-arn:aws:iam::$account_id:role/LabRole}"
+
+          if [[ ! "$lab_role_arn" =~ ^arn:aws[a-z-]*:iam::[0-9]{12}:role/LabRole$ ]]; then
+            echo "::error::LAB_ROLE_ARN must reference the AWS Academy LabRole."
+            exit 1
+          fi
+
+          echo "TF_VAR_lab_role_arn=$lab_role_arn" >> "$GITHUB_ENV"
 
       - name: Set database secrets
         shell: bash

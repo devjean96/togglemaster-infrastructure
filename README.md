@@ -119,7 +119,9 @@ Nao existe etapa de apply em Pull Requests. Na branch `main`, as validacoes e o 
 Configure no repositorio:
 
 - secrets `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` e `TF_STATE_BUCKET`;
-- variable `LAB_ROLE_ARN`;
+- variable opcional `LAB_ROLE_ARN`. Sem ela, o workflow consulta o account ID
+  autenticado via STS e monta automaticamente
+  `arn:aws:iam::<ACCOUNT_ID>:role/LabRole`;
 - variable opcional `EKS_PUBLIC_ACCESS_CIDRS` em formato JSON, por exemplo
   `["203.0.113.10/32"]`. Sem essa variable, a pipeline usa `["0.0.0.0/0"]`
   como bypass para permitir que runners efemeros acessem os providers
