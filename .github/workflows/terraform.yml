@@ -27,7 +27,7 @@ env:
   AWS_REGION: us-east-1
   AWS_DEFAULT_REGION: us-east-1
   TF_VAR_lab_role_arn: ${{ vars.LAB_ROLE_ARN }}
-  TF_VAR_eks_public_access_cidrs: ${{ vars.EKS_PUBLIC_ACCESS_CIDRS }}
+  TF_VAR_eks_public_access_cidrs: ${{ vars.EKS_PUBLIC_ACCESS_CIDRS || '["0.0.0.0/0"]' }}
 
 jobs:
   pull-request-and-main-plan:

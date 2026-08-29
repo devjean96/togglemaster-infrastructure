@@ -44,11 +44,11 @@ variable "eks_endpoint_public_access" {
   default = true
 }
 variable "eks_public_access_cidrs" {
-  description = "CIDRs publicos autorizados no endpoint EKS; informe ao menos um /32 da equipe."
+  description = "CIDRs autorizados no endpoint publico do EKS. No GitHub-hosted runner do AWS Academy, 0.0.0.0/0 e aceito como bypass documentado."
   type        = list(string)
   validation {
-    condition     = length(var.eks_public_access_cidrs) > 0 && !contains(var.eks_public_access_cidrs, "0.0.0.0/0")
-    error_message = "Informe CIDRs restritos; 0.0.0.0/0 nao e permitido."
+    condition     = length(var.eks_public_access_cidrs) > 0
+    error_message = "Informe pelo menos um CIDR para acesso ao endpoint do EKS."
   }
 }
 variable "eks_node_instance_types" {

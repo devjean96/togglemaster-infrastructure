@@ -120,7 +120,10 @@ Configure no repositorio:
 
 - secrets `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` e `TF_STATE_BUCKET`;
 - variable `LAB_ROLE_ARN`;
-- variable `EKS_PUBLIC_ACCESS_CIDRS` em formato JSON, por exemplo `["203.0.113.10/32"]`;
+- variable opcional `EKS_PUBLIC_ACCESS_CIDRS` em formato JSON, por exemplo
+  `["203.0.113.10/32"]`. Sem essa variable, a pipeline usa `["0.0.0.0/0"]`
+  como bypass para permitir que runners efemeros acessem os providers
+  Helm/Kubernetes;
 - secrets `HOMOLOG_AUTH_DB_PASSWORD`, `HOMOLOG_FLAGS_DB_PASSWORD`, `HOMOLOG_TARGETING_DB_PASSWORD`;
 - GitHub Environment chamado `homolog`.
 
@@ -138,7 +141,8 @@ em `2027-08-29`:
   permissoes KMS;
 - `AWS-0040`: o endpoint publico do EKS e necessario para o runner hospedado do
   GitHub instalar o ArgoCD via Terraform. O endpoint privado permanece ativo e
-  o acesso publico e limitado por `eks_public_access_cidrs`.
+  a autenticacao IAM continua obrigatoria. Quando existir um runner ou IP de
+  saida estavel, configure `EKS_PUBLIC_ACCESS_CIDRS` e remova o fallback aberto.
 
 As excecoes devem ser revistas antes da expiracao. Em uma conta AWS sem as
 restricoes do Academy, use CMKs para S3/EKS e um runner com conectividade privada

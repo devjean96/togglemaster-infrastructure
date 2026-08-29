@@ -22,8 +22,8 @@ variable "public_access_cidrs" {
   type        = list(string)
 
   validation {
-    condition     = !contains(var.public_access_cidrs, "0.0.0.0/0")
-    error_message = "O endpoint do EKS nao pode ser exposto para 0.0.0.0/0."
+    condition     = length(var.public_access_cidrs) > 0
+    error_message = "Informe pelo menos um CIDR para acesso ao endpoint do EKS."
   }
 }
 variable "node_instance_types" {
