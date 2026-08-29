@@ -1,3 +1,8 @@
+# AWS Academy exception: a customer managed KMS key is not provisioned because
+# of lab permissions and cost limits. The GitHub-hosted runner also needs the
+# public API endpoint to install ArgoCD via Terraform. Private access remains
+# enabled and public access is restricted by var.public_access_cidrs.
+#trivy:ignore:AWS-0039:exp:2027-08-29 trivy:ignore:AWS-0040:exp:2027-08-29
 resource "aws_eks_cluster" "this" {
   name                      = var.cluster_name
   role_arn                  = var.lab_role_arn

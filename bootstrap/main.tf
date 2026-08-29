@@ -14,6 +14,9 @@ resource "aws_s3_bucket_versioning" "terraform_state" {
   }
 }
 
+# AWS Academy exception: the state remains encrypted with SSE-S3. A customer
+# managed KMS key is not provisioned because of lab permissions and cost limits.
+#trivy:ignore:AWS-0132:exp:2027-08-29
 resource "aws_s3_bucket_server_side_encryption_configuration" "terraform_state" {
   bucket = aws_s3_bucket.terraform_state.id
 
@@ -67,4 +70,3 @@ data "aws_iam_policy_document" "terraform_state" {
     }
   }
 }
-

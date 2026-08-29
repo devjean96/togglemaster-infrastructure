@@ -126,6 +126,24 @@ Configure no repositorio:
 
 As credenciais do AWS Academy expiram. Atualize os tres secrets AWS antes de executar o pipeline. Pull Requests vindos de forks nao recebem secrets e, portanto, nao conseguem executar `init`/`plan` contra o backend remoto.
 
+## Excecoes de seguranca do AWS Academy
+
+O scan Trivy continua bloqueando achados `HIGH` e `CRITICAL`. Somente tres
+regras possuem bypass inline, limitado ao recurso correspondente e com expiracao
+em `2027-08-29`:
+
+- `AWS-0132`: o bucket de state usa SSE-S3 (`AES256`); uma CMK adicionaria custo
+  e pode exigir permissoes KMS indisponiveis no laboratorio;
+- `AWS-0039`: a criptografia de Secrets do EKS com CMK depende das mesmas
+  permissoes KMS;
+- `AWS-0040`: o endpoint publico do EKS e necessario para o runner hospedado do
+  GitHub instalar o ArgoCD via Terraform. O endpoint privado permanece ativo e
+  o acesso publico e limitado por `eks_public_access_cidrs`.
+
+As excecoes devem ser revistas antes da expiracao. Em uma conta AWS sem as
+restricoes do Academy, use CMKs para S3/EKS e um runner com conectividade privada
+ao endpoint do cluster, removendo os bypasses.
+
 ## ArgoCD
 
 O modulo `modules/argocd` usa o provider Helm do Terraform. Alem de instalar o

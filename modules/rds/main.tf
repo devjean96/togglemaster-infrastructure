@@ -18,10 +18,11 @@ resource "aws_security_group" "this" {
   }
 
   egress {
+    description = "Outbound traffic restricted to the ToggleMaster VPC"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.vpc_cidr]
   }
 
   tags = merge(var.tags, { Name = "${var.name_prefix}-postgres-sg" })
