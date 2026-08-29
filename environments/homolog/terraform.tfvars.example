@@ -1,0 +1,11 @@
+academy_mode = true
+lab_role_arn = "arn:aws:iam::123456789012:role/LabRole"
+
+# Restrinja ao CIDR publico da equipe sempre que possivel.
+eks_public_access_cidrs = ["203.0.113.10/32"]
+
+# Passe senhas via TF_VAR_*; nao grave segredos neste arquivo.
+
+# O Terraform instala o ArgoCD e cria a root Application que observa este repositorio.
+argocd_bootstrap_gitops = true
+gitops_repository_url  = "https://github.com/devjean96/togglemaster-gitops.git"
