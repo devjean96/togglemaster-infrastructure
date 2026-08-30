@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ .Values.application.name | quote }}
+  namespace: {{ .Release.Namespace | quote }}
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: {{ .Values.application.repositoryUrl | quote }}
+    targetRevision: {{ .Values.application.targetRevision | quote }}
+    path: {{ .Values.application.rootPath | quote }}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: {{ .Release.Namespace | quote }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - ServerSideApply=true
+      - PruneLast=true

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: togglemaster-gitops-bootstrap
+description: Bootstrap da root Application do ToggleMaster depois dos CRDs do ArgoCD
+type: application
+version: 0.1.0
+appVersion: "1.0"

@@ -13,7 +13,7 @@ variable "service_type" {
 }
 
 variable "bootstrap_gitops" {
-  description = "Cria a root Application junto com o release Helm do ArgoCD."
+  description = "Cria a root Application em uma segunda release, depois da instalacao dos CRDs do ArgoCD."
   type        = bool
   default     = true
 }

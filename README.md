@@ -152,11 +152,13 @@ ao endpoint do cluster, removendo os bypasses.
 
 ## ArgoCD
 
-O modulo `modules/argocd` usa o provider Helm do Terraform. Alem de instalar o
-chart `argo-cd`, ele inclui a Application `togglemaster-root` via `extraObjects`;
-portanto nao existe um `kubectl apply` manual no bootstrap normal. A root
-Application observa `https://github.com/devjean96/togglemaster-gitops.git`, no
-path `argocd`, e possui sincronizacao automatica com `prune` e `selfHeal`.
+O modulo `modules/argocd` usa duas releases do provider Helm. A primeira instala
+o chart `argo-cd` e aguarda seus CRDs; a segunda instala o chart local
+`bootstrap-chart`, que cria a Application `togglemaster-root`. Essa ordem evita
+tentar validar o kind `Application` antes de o CRD existir e nao requer
+`kubectl apply` manual. A root Application observa
+`https://github.com/devjean96/togglemaster-gitops.git`, no path `argocd`, e
+possui sincronizacao automatica com `prune` e `selfHeal`.
 
 Para desabilitar temporariamente o bootstrap da root Application, defina
 `argocd_bootstrap_gitops = false`. Se o repositorio GitOps for privado, configure

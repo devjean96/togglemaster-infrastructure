@@ -24,42 +24,28 @@ resource "helm_release" "argocd" {
         type = var.service_type
       }
     }
-
-    extraObjects = var.bootstrap_gitops ? [
-      {
-        apiVersion = "argoproj.io/v1alpha1"
-        kind       = "Application"
-        metadata = {
-          name      = "togglemaster-root"
-          namespace = kubernetes_namespace_v1.argocd.metadata[0].name
-          finalizers = [
-            "resources-finalizer.argocd.argoproj.io"
-          ]
-        }
-        spec = {
-          project = "default"
-          source = {
-            repoURL        = var.gitops_repository_url
-            targetRevision = var.gitops_target_revision
-            path           = var.gitops_root_path
-          }
-          destination = {
-            server    = "https://kubernetes.default.svc"
-            namespace = kubernetes_namespace_v1.argocd.metadata[0].name
-          }
-          syncPolicy = {
-            automated = {
-              prune      = true
-              selfHeal   = true
-              allowEmpty = false
-            }
-            syncOptions = [
-              "ServerSideApply=true",
-              "PruneLast=true"
-            ]
-          }
-        }
-      }
-    ] : []
   })]
+}
+
+resource "helm_release" "gitops_bootstrap" {
+  count = var.bootstrap_gitops ? 1 : 0
+
+  name      = "togglemaster-gitops-bootstrap"
+  chart     = "${path.module}/bootstrap-chart"
+  namespace = kubernetes_namespace_v1.argocd.metadata[0].name
+
+  atomic          = true
+  cleanup_on_fail = true
+  timeout         = 300
+
+  values = [yamlencode({
+    application = {
+      name           = "togglemaster-root"
+      repositoryUrl  = var.gitops_repository_url
+      targetRevision = var.gitops_target_revision
+      rootPath       = var.gitops_root_path
+    }
+  })]
+
+  depends_on = [helm_release.argocd]
 }

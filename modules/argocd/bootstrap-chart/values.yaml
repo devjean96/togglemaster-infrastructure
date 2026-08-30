@@ -1,0 +1,5 @@
+application:
+  name: togglemaster-root
+  repositoryUrl: https://github.com/devjean96/togglemaster-gitops.git
+  targetRevision: main
+  rootPath: argocd
