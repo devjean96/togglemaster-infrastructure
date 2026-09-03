@@ -6,6 +6,7 @@ on:
       - "**/*.tf"
       - "**/*.hcl"
       - "modules/argocd/bootstrap-chart/**"
+      - "modules/workload-secrets/chart/**"
       - ".github/workflows/terraform.yml"
   push:
     branches: [main]
@@ -13,6 +14,7 @@ on:
       - "**/*.tf"
       - "**/*.hcl"
       - "modules/argocd/bootstrap-chart/**"
+      - "modules/workload-secrets/chart/**"
       - ".github/workflows/terraform.yml"
   workflow_dispatch:
 
@@ -34,6 +36,13 @@ jobs:
   pull-request-and-main-plan:
     name: Validate and plan (homolog)
     runs-on: ubuntu-latest
+    environment: homolog
+    env:
+      TF_VAR_auth_db_password: ${{ secrets.HOMOLOG_AUTH_DB_PASSWORD }}
+      TF_VAR_flags_db_password: ${{ secrets.HOMOLOG_FLAGS_DB_PASSWORD }}
+      TF_VAR_targeting_db_password: ${{ secrets.HOMOLOG_TARGETING_DB_PASSWORD }}
+      TF_VAR_auth_master_key: ${{ secrets.HOMOLOG_AUTH_MASTER_KEY }}
+      TF_VAR_evaluation_service_api_key: ${{ secrets.HOMOLOG_EVALUATION_SERVICE_API_KEY }}
 
     steps:
       - name: Checkout
@@ -70,13 +79,6 @@ jobs:
           fi
 
           echo "TF_VAR_lab_role_arn=$lab_role_arn" >> "$GITHUB_ENV"
-
-      - name: Set database secrets
-        shell: bash
-        run: |
-          echo "TF_VAR_auth_db_password=${{ secrets.HOMOLOG_AUTH_DB_PASSWORD }}" >> "$GITHUB_ENV"
-          echo "TF_VAR_flags_db_password=${{ secrets.HOMOLOG_FLAGS_DB_PASSWORD }}" >> "$GITHUB_ENV"
-          echo "TF_VAR_targeting_db_password=${{ secrets.HOMOLOG_TARGETING_DB_PASSWORD }}" >> "$GITHUB_ENV"
 
       - name: Terraform format
         run: terraform fmt -check -recursive
@@ -108,6 +110,12 @@ jobs:
     needs: pull-request-and-main-plan
     runs-on: ubuntu-latest
     environment: homolog
+    env:
+      TF_VAR_auth_db_password: ${{ secrets.HOMOLOG_AUTH_DB_PASSWORD }}
+      TF_VAR_flags_db_password: ${{ secrets.HOMOLOG_FLAGS_DB_PASSWORD }}
+      TF_VAR_targeting_db_password: ${{ secrets.HOMOLOG_TARGETING_DB_PASSWORD }}
+      TF_VAR_auth_master_key: ${{ secrets.HOMOLOG_AUTH_MASTER_KEY }}
+      TF_VAR_evaluation_service_api_key: ${{ secrets.HOMOLOG_EVALUATION_SERVICE_API_KEY }}
 
     steps:
       - name: Checkout
@@ -144,13 +152,6 @@ jobs:
           fi
 
           echo "TF_VAR_lab_role_arn=$lab_role_arn" >> "$GITHUB_ENV"
-
-      - name: Set database secrets
-        shell: bash
-        run: |
-          echo "TF_VAR_auth_db_password=${{ secrets.HOMOLOG_AUTH_DB_PASSWORD }}" >> "$GITHUB_ENV"
-          echo "TF_VAR_flags_db_password=${{ secrets.HOMOLOG_FLAGS_DB_PASSWORD }}" >> "$GITHUB_ENV"
-          echo "TF_VAR_targeting_db_password=${{ secrets.HOMOLOG_TARGETING_DB_PASSWORD }}" >> "$GITHUB_ENV"
 
       - name: Terraform format
         run: terraform fmt -check -recursive

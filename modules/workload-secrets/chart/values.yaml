@@ -1,0 +1,9 @@
+auth:
+  databaseUrl: ""
+  masterKey: ""
+flags:
+  databaseUrl: ""
+targeting:
+  databaseUrl: ""
+evaluation:
+  serviceApiKey: ""

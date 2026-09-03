@@ -83,6 +83,26 @@ variable "targeting_db_password" {
   type      = string
   sensitive = true
 }
+variable "auth_master_key" {
+  description = "Chave usada para proteger operacoes internas do auth-service."
+  type        = string
+  sensitive   = true
+
+  validation {
+    condition     = length(var.auth_master_key) >= 32
+    error_message = "auth_master_key deve possuir pelo menos 32 caracteres."
+  }
+}
+variable "evaluation_service_api_key" {
+  description = "Chave de autenticacao interna do evaluation-service."
+  type        = string
+  sensitive   = true
+
+  validation {
+    condition     = length(var.evaluation_service_api_key) >= 32
+    error_message = "evaluation_service_api_key deve possuir pelo menos 32 caracteres."
+  }
+}
 variable "rds_instance_class" {
   type    = string
   default = "db.t3.micro"

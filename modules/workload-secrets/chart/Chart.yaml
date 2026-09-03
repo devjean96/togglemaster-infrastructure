@@ -1,0 +1,6 @@
+apiVersion: v2
+name: togglemaster-workload-secrets
+description: Kubernetes Secrets necessarios para os workloads do ToggleMaster
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

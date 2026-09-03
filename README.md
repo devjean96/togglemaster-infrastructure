@@ -11,6 +11,8 @@ Infraestrutura como codigo do ToggleMaster, provisionada com Terraform na AWS. P
 - DynamoDB `ToggleMasterAnalytics-<ambiente>` com capacidade sob demanda.
 - SQS de eventos de avaliacao com dead-letter queue.
 - Cinco repositorios ECR: auth, flag, targeting, evaluation e analytics.
+- Quatro Kubernetes Secrets para auth, flag, targeting e evaluation, entregues
+  por uma release Helm gerenciada pelo Terraform.
 - ArgoCD instalado no EKS pelo chart Helm oficial e root Application criada pelo
   mesmo `terraform apply` para iniciar a reconciliacao GitOps.
 
@@ -27,6 +29,7 @@ togglemaster-infrastructure/
 │   ├── dynamodb/
 │   ├── sqs/
 │   ├── ecr/
+│   ├── workload-secrets/
 │   └── argocd/
 ├── environments/
 │   └── homolog/                # unico ambiente implantavel
@@ -126,8 +129,15 @@ Configure no repositorio:
   `["203.0.113.10/32"]`. Sem essa variable, a pipeline usa `["0.0.0.0/0"]`
   como bypass para permitir que runners efemeros acessem os providers
   Helm/Kubernetes;
-- secrets `HOMOLOG_AUTH_DB_PASSWORD`, `HOMOLOG_FLAGS_DB_PASSWORD`, `HOMOLOG_TARGETING_DB_PASSWORD`;
+- Environment secrets `HOMOLOG_AUTH_DB_PASSWORD`,
+  `HOMOLOG_FLAGS_DB_PASSWORD`, `HOMOLOG_TARGETING_DB_PASSWORD`,
+  `HOMOLOG_AUTH_MASTER_KEY` e `HOMOLOG_EVALUATION_SERVICE_API_KEY`;
 - GitHub Environment chamado `homolog`.
+
+Os jobs de plan e apply referenciam o Environment `homolog`, pois ambos precisam
+das variaveis sensiveis. Se houver required reviewers, o plan tambem aguardara
+aprovacao antes de receber os secrets. As URLs PostgreSQL sao montadas pelo
+Terraform com os endpoints RDS e nunca devem ser cadastradas manualmente no Git.
 
 As credenciais do AWS Academy expiram. Atualize os tres secrets AWS antes de executar o pipeline. Pull Requests vindos de forks nao recebem secrets e, portanto, nao conseguem executar `init`/`plan` contra o backend remoto.
 

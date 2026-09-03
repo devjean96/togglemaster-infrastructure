@@ -15,3 +15,6 @@ output "argocd_namespace" { value = try(module.argocd[0].namespace, null) }
 output "argocd_root_application" {
   value = try(module.argocd[0].root_application_name, null)
 }
+output "workload_secrets_release" {
+  value = module.workload_secrets.release_name
+}

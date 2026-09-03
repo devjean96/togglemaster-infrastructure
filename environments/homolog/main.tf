@@ -86,6 +86,44 @@ module "rds" {
   tags                         = local.common_tags
 }
 
+module "workload_secrets" {
+  source = "../../modules/workload-secrets"
+
+  namespace = local.name_prefix
+
+  auth_database_url = format(
+    "postgres://%s:%s@%s:%d/%s?sslmode=require",
+    urlencode(var.db_username),
+    urlencode(var.auth_db_password),
+    module.rds.endpoints["auth"],
+    module.rds.ports["auth"],
+    module.rds.database_names["auth"]
+  )
+  auth_master_key = var.auth_master_key
+
+  flags_database_url = format(
+    "postgres://%s:%s@%s:%d/%s?sslmode=require",
+    urlencode(var.db_username),
+    urlencode(var.flags_db_password),
+    module.rds.endpoints["flags"],
+    module.rds.ports["flags"],
+    module.rds.database_names["flags"]
+  )
+
+  targeting_database_url = format(
+    "postgres://%s:%s@%s:%d/%s?sslmode=require",
+    urlencode(var.db_username),
+    urlencode(var.targeting_db_password),
+    module.rds.endpoints["targeting"],
+    module.rds.ports["targeting"],
+    module.rds.database_names["targeting"]
+  )
+
+  evaluation_service_api_key = var.evaluation_service_api_key
+
+  depends_on = [module.eks]
+}
+
 module "elasticache" {
   source = "../../modules/elasticache"
 

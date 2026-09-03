@@ -8,7 +8,9 @@ argocd_chart_version    = "10.4.1"
 # Restrinja ao CIDR publico da equipe sempre que possivel.
 eks_public_access_cidrs = ["203.0.113.10/32"]
 
-# Passe senhas via TF_VAR_*; nao grave segredos neste arquivo.
+# Passe senhas e chaves via TF_VAR_*; nao grave segredos neste arquivo.
+# TF_VAR_auth_master_key e TF_VAR_evaluation_service_api_key devem possuir
+# pelo menos 32 caracteres.
 
 # O Terraform instala o ArgoCD e cria a root Application que observa este repositorio.
 argocd_bootstrap_gitops = true
