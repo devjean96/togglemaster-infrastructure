@@ -5,12 +5,14 @@ on:
     paths:
       - "**/*.tf"
       - "**/*.hcl"
+      - "modules/argocd/bootstrap-chart/**"
       - ".github/workflows/terraform.yml"
   push:
     branches: [main]
     paths:
       - "**/*.tf"
       - "**/*.hcl"
+      - "modules/argocd/bootstrap-chart/**"
       - ".github/workflows/terraform.yml"
   workflow_dispatch:
 
