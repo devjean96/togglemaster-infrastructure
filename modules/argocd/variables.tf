@@ -5,7 +5,7 @@ variable "namespace" {
 variable "chart_version" {
   description = "Versao do chart Helm argo-cd."
   type        = string
-  default     = "7.7.16"
+  default     = "10.4.1"
 }
 variable "service_type" {
   type    = string

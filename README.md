@@ -160,6 +160,11 @@ tentar validar o kind `Application` antes de o CRD existir e nao requer
 `https://github.com/devjean96/togglemaster-gitops.git`, no path `argocd`, e
 possui sincronizacao automatica com `prune` e `selfHeal`.
 
+O ambiente fixa o Kubernetes em `1.36` e o chart `argo-cd` em `10.4.1`, que
+instala o ArgoCD `3.5.2` com schemas do Kubernetes `1.36`. Mantenha essas versoes
+compativeis para evitar `ComparisonError` em campos novos da API, como
+`Deployment.status.terminatingReplicas`.
+
 Para desabilitar temporariamente o bootstrap da root Application, defina
 `argocd_bootstrap_gitops = false`. Se o repositorio GitOps for privado, configure
 as credenciais do repositorio no ArgoCD por um mecanismo declarativo antes do
@@ -179,3 +184,37 @@ O repositorio ECR usado inicialmente pela pipeline do auth pode ser consultado
 com `terraform output -raw auth_ecr_repository_url`. Sua criacao, scan-on-push,
 criptografia e politica de tags imutaveis pertencem ao modulo `modules/ecr`; a
 pipeline da aplicacao apenas verifica sua existencia e publica imagens.
+
+## Destruir o ambiente e interromper custos
+
+O script abaixo valida a conta AWS autenticada, exige uma confirmacao contendo o
+account ID, usa o state remoto e destroi todo o ambiente `homolog`. Os
+repositorios ECR desse ambiente sao configurados com `force_delete`, portanto as
+imagens tambem sao removidas.
+
+```bash
+export AWS_ACCESS_KEY_ID="..."
+export AWS_SECRET_ACCESS_KEY="..."
+export AWS_SESSION_TOKEN="..."
+
+./scripts/destroy-academy.sh \
+  --state-bucket "togglemaster-terraform-state-ACCOUNT_ID" \
+  --account-id "ACCOUNT_ID"
+```
+
+Por seguranca, o bucket versionado que armazena o state e preservado por padrao.
+Depois que todos os recursos tiverem sido destruidos, use
+`--delete-state-bucket` para remover tambem todas as versoes do state e o bucket.
+Essa opcao e irreversivel e faz o state local do diretorio `bootstrap` deixar de
+representar a AWS.
+
+```bash
+./scripts/destroy-academy.sh \
+  --state-bucket "togglemaster-terraform-state-ACCOUNT_ID" \
+  --account-id "ACCOUNT_ID" \
+  --delete-state-bucket
+```
+
+O script nao procura nem apaga recursos fora do state Terraform. Ao final,
+confira o painel de billing do AWS Academy, pois recursos criados manualmente ou
+por outras atividades nao pertencem a este projeto.

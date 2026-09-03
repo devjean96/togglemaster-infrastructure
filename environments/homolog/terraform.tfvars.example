@@ -1,6 +1,10 @@
 academy_mode = true
 lab_role_arn = "arn:aws:iam::123456789012:role/LabRole"
 
+# Par de versoes compativel: ArgoCD 3.5.2 inclui schemas do Kubernetes 1.36.
+kubernetes_version      = "1.36"
+argocd_chart_version    = "10.4.1"
+
 # Restrinja ao CIDR publico da equipe sempre que possivel.
 eks_public_access_cidrs = ["203.0.113.10/32"]
 

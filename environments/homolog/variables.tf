@@ -37,7 +37,7 @@ variable "enable_nat_gateway" {
 }
 variable "kubernetes_version" {
   type    = string
-  default = null
+  default = "1.36"
 }
 variable "eks_endpoint_public_access" {
   type    = bool
@@ -133,7 +133,7 @@ variable "install_argocd" {
 }
 variable "argocd_chart_version" {
   type    = string
-  default = "7.7.16"
+  default = "10.4.1"
 }
 variable "argocd_bootstrap_gitops" {
   type    = bool

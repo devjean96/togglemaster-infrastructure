@@ -123,7 +123,8 @@ module "ecr" {
     "${local.name_prefix}/evaluation-service",
     "${local.name_prefix}/analytics-service"
   ]
-  tags = local.common_tags
+  force_delete = true
+  tags         = local.common_tags
 }
 
 module "argocd" {
