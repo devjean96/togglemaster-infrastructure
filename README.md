@@ -13,6 +13,8 @@ Infraestrutura como codigo do ToggleMaster, provisionada com Terraform na AWS. P
 - Cinco repositorios ECR: auth, flag, targeting, evaluation e analytics.
 - Quatro Kubernetes Secrets para auth, flag, targeting e evaluation, entregues
   por uma release Helm gerenciada pelo Terraform.
+- Ingress NGINX com uma replica e Network Load Balancer publico para acesso aos
+  microservicos pelos respectivos prefixos HTTP.
 - ArgoCD instalado no EKS pelo chart Helm oficial e root Application criada pelo
   mesmo `terraform apply` para iniciar a reconciliacao GitOps.
 
@@ -30,6 +32,7 @@ togglemaster-infrastructure/
 │   ├── sqs/
 │   ├── ecr/
 │   ├── workload-secrets/
+│   ├── ingress-nginx/
 │   └── argocd/
 ├── environments/
 │   └── homolog/                # unico ambiente implantavel
@@ -107,6 +110,10 @@ O NAT Gateway permite que nodes privados acessem ECR e endpoints externos, mas c
 
 O ambiente usa uma configuracao economica: um node EKS, instancias RDS `db.t3.micro` sem Multi-AZ, um node Redis `cache.t3.micro` e backups reduzidos. Isso evita duplicar clusters, bancos e repositorios ECR sem remover os componentes obrigatorios. Revise quotas e disponibilidade dos tipos `t3`/`db.t3`/`cache.t3` na conta Academy antes do apply.
 
+O Ingress NGINX cria um Network Load Balancer, que possui cobranca por hora e
+por uso. Restrinja `ingress_load_balancer_source_ranges` ao CIDR publico da
+equipe quando nao for necessario acesso de toda a Internet.
+
 ## Pipeline GitHub Actions
 
 Em Pull Requests, o workflow executa para o ambiente unico:
@@ -129,6 +136,8 @@ Configure no repositorio:
   `["203.0.113.10/32"]`. Sem essa variable, a pipeline usa `["0.0.0.0/0"]`
   como bypass para permitir que runners efemeros acessem os providers
   Helm/Kubernetes;
+- variable opcional `INGRESS_LOAD_BALANCER_SOURCE_RANGES` em formato JSON. Use
+  `["0.0.0.0/0"]` para acesso publico ou restrinja ao CIDR da equipe;
 - Environment secrets `HOMOLOG_AUTH_DB_PASSWORD`,
   `HOMOLOG_FLAGS_DB_PASSWORD`, `HOMOLOG_TARGETING_DB_PASSWORD`,
   `HOMOLOG_AUTH_MASTER_KEY` e `HOMOLOG_EVALUATION_SERVICE_API_KEY`;
@@ -189,6 +198,30 @@ kubectl -n argocd get secret argocd-initial-admin-secret \
 ```
 
 O Service do ArgoCD fica como `ClusterIP`. Use `kubectl port-forward` ou altere conscientemente o tipo de Service antes de expo-lo externamente.
+
+## Acesso externo aos microservicos
+
+O Terraform instala o chart oficial `ingress-nginx` e cria o Service
+`ingress-nginx-controller` como `LoadBalancer`. O NLB encaminha as requisicoes
+ao Ingress mantido no repositorio GitOps. Depois do apply, obtenha o hostname:
+
+```bash
+terraform -chdir=environments/homolog output -raw ingress_load_balancer_hostname
+terraform -chdir=environments/homolog output -raw auth_service_external_url
+terraform -chdir=environments/homolog output microservice_external_urls
+```
+
+Se o primeiro apply retornar `null`, aguarde o provisionamento do NLB e execute
+`terraform refresh` ou consulte diretamente o cluster:
+
+```bash
+kubectl -n ingress-nginx get service ingress-nginx-controller
+kubectl -n togglemaster-homolog get ingress togglemaster
+```
+
+As rotas externas sao `/auth`, `/flags`, `/targeting`, `/evaluate` e
+`/analytics`. Por exemplo, o health check de autenticacao fica disponível em
+`http://<HOSTNAME_DO_NLB>/auth/health`.
 
 O repositorio ECR usado inicialmente pela pipeline do auth pode ser consultado
 com `terraform output -raw auth_ecr_repository_url`. Sua criacao, scan-on-push,

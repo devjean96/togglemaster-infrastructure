@@ -31,6 +31,7 @@ env:
   AWS_REGION: us-east-1
   AWS_DEFAULT_REGION: us-east-1
   TF_VAR_eks_public_access_cidrs: ${{ vars.EKS_PUBLIC_ACCESS_CIDRS || '["0.0.0.0/0"]' }}
+  TF_VAR_ingress_load_balancer_source_ranges: ${{ vars.INGRESS_LOAD_BALANCER_SOURCE_RANGES || '["0.0.0.0/0"]' }}
 
 jobs:
   pull-request-and-main-plan:

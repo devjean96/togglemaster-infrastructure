@@ -165,6 +165,16 @@ module "ecr" {
   tags         = local.common_tags
 }
 
+module "ingress_nginx" {
+  count  = var.install_ingress_nginx ? 1 : 0
+  source = "../../modules/ingress-nginx"
+
+  chart_version               = var.ingress_nginx_chart_version
+  load_balancer_source_ranges = var.ingress_load_balancer_source_ranges
+
+  depends_on = [module.eks]
+}
+
 module "argocd" {
   count  = var.install_argocd ? 1 : 0
   source = "../../modules/argocd"
@@ -174,5 +184,5 @@ module "argocd" {
   gitops_repository_url  = var.gitops_repository_url
   gitops_target_revision = var.gitops_target_revision
 
-  depends_on = [module.eks]
+  depends_on = [module.eks, module.ingress_nginx]
 }

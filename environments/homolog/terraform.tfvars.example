@@ -4,9 +4,13 @@ lab_role_arn = "arn:aws:iam::123456789012:role/LabRole"
 # Par de versoes compativel: ArgoCD 3.5.2 inclui schemas do Kubernetes 1.36.
 kubernetes_version      = "1.36"
 argocd_chart_version    = "10.4.1"
+ingress_nginx_chart_version = "4.15.1"
 
 # Restrinja ao CIDR publico da equipe sempre que possivel.
 eks_public_access_cidrs = ["203.0.113.10/32"]
+
+# Use 0.0.0.0/0 somente quando os microservicos precisarem ser publicos para toda a Internet.
+ingress_load_balancer_source_ranges = ["203.0.113.10/32"]
 
 # Passe senhas e chaves via TF_VAR_*; nao grave segredos neste arquivo.
 # TF_VAR_auth_master_key e TF_VAR_evaluation_service_api_key devem possuir

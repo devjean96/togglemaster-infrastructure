@@ -151,6 +151,20 @@ variable "install_argocd" {
   type    = bool
   default = true
 }
+variable "install_ingress_nginx" {
+  description = "Instala o ingress-nginx e cria um Network Load Balancer publico."
+  type        = bool
+  default     = true
+}
+variable "ingress_nginx_chart_version" {
+  type    = string
+  default = "4.15.1"
+}
+variable "ingress_load_balancer_source_ranges" {
+  description = "CIDRs autorizados a acessar os microservicos pelo Load Balancer."
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+}
 variable "argocd_chart_version" {
   type    = string
   default = "10.4.1"
