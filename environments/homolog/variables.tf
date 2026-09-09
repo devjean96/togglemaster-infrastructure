@@ -57,11 +57,11 @@ variable "eks_node_instance_types" {
 }
 variable "eks_desired_size" {
   type    = number
-  default = 1
+  default = 2
 }
 variable "eks_min_size" {
   type    = number
-  default = 1
+  default = 2
 }
 variable "eks_max_size" {
   type    = number
