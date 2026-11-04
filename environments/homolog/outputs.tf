@@ -18,6 +18,24 @@ output "argocd_root_application" {
 output "workload_secrets_release" {
   value = module.workload_secrets.release_name
 }
+output "eks_cluster_security_group_id" {
+  description = "Security group do EKS com a regra explicita de saida TCP/443."
+  value       = module.eks.cluster_security_group_id
+}
+output "opentelemetry_collector_namespace" {
+  value = try(module.opentelemetry_collector[0].namespace, null)
+}
+output "opentelemetry_collector_service" {
+  value = try(module.opentelemetry_collector[0].service_name, null)
+}
+output "opentelemetry_otlp_http_endpoint" {
+  description = "Endpoint interno que os SDKs OpenTelemetry devem usar com OTLP/HTTP."
+  value       = try(module.opentelemetry_collector[0].otlp_http_endpoint, null)
+}
+output "opentelemetry_otlp_grpc_endpoint" {
+  description = "Endpoint interno que os SDKs OpenTelemetry devem usar com OTLP/gRPC."
+  value       = try(module.opentelemetry_collector[0].otlp_grpc_endpoint, null)
+}
 output "ingress_nginx_namespace" {
   value = try(module.ingress_nginx[0].namespace, null)
 }

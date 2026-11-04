@@ -26,6 +26,16 @@ variable "public_access_cidrs" {
     error_message = "Informe pelo menos um CIDR para acesso ao endpoint do EKS."
   }
 }
+variable "https_egress_cidrs" {
+  description = "CIDRs de destino autorizados para saida HTTPS dos nodes EKS. Endpoints SaaS podem alterar seus IPs, portanto o padrao libera somente TCP/443 para a Internet."
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+
+  validation {
+    condition     = length(var.https_egress_cidrs) > 0 && alltrue([for cidr in var.https_egress_cidrs : can(cidrnetmask(cidr))])
+    error_message = "https_egress_cidrs deve conter ao menos um CIDR IPv4 valido."
+  }
+}
 variable "node_instance_types" {
   type    = list(string)
   default = ["t3.medium"]

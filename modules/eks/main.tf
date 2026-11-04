@@ -24,6 +24,22 @@ resource "aws_eks_cluster" "this" {
   tags = var.tags
 }
 
+# O cluster security group e criado pelo EKS e compartilhado com o managed node
+# group. A regra explicita de saida HTTPS permite que workloads como o
+# OpenTelemetry Collector exportem telemetria para endpoints OTLP externos.
+resource "aws_vpc_security_group_egress_rule" "https" {
+  for_each = toset(var.https_egress_cidrs)
+
+  security_group_id = aws_eks_cluster.this.vpc_config[0].cluster_security_group_id
+  description       = "HTTPS egress for external services and telemetry exporters"
+  cidr_ipv4         = each.value
+  from_port         = 443
+  to_port           = 443
+  ip_protocol       = "tcp"
+
+  tags = merge(var.tags, { Name = "${var.cluster_name}-https-egress" })
+}
+
 resource "aws_eks_node_group" "this" {
   cluster_name    = aws_eks_cluster.this.name
   node_group_name = "${var.cluster_name}-nodes"

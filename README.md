@@ -17,6 +17,9 @@ Infraestrutura como codigo do ToggleMaster, provisionada com Terraform na AWS. P
   microservicos pelos respectivos prefixos HTTP.
 - ArgoCD instalado no EKS pelo chart Helm oficial e root Application criada pelo
   mesmo `terraform apply` para iniciar a reconciliacao GitOps.
+- OpenTelemetry Collector em modo gateway, exposto somente por Service
+  `ClusterIP` nas portas OTLP 4317/4318 e exportando traces ao New Relic por
+  HTTPS/443.
 
 ## Estrutura
 
@@ -32,6 +35,7 @@ togglemaster-infrastructure/
 │   ├── sqs/
 │   ├── ecr/
 │   ├── workload-secrets/
+│   ├── opentelemetry-collector/
 │   ├── ingress-nginx/
 │   └── argocd/
 ├── environments/
@@ -99,6 +103,9 @@ export TF_VAR_lab_role_arn="arn:aws:iam::123456789012:role/LabRole"
 export TF_VAR_auth_db_password="..."
 export TF_VAR_flags_db_password="..."
 export TF_VAR_targeting_db_password="..."
+export TF_VAR_auth_master_key="..."
+export TF_VAR_evaluation_service_api_key="..."
+export TF_VAR_newrelic_license_key="..."
 terraform plan
 ```
 
@@ -132,10 +139,14 @@ Configure no repositorio:
 - variable opcional `LAB_ROLE_ARN`. Sem ela, o workflow consulta o account ID
   autenticado via STS e monta automaticamente
   `arn:aws:iam::<ACCOUNT_ID>:role/LabRole`;
+- Environment secret `HOMOLOG_NEW_RELIC_LICENSE_KEY` com a license key de
+  ingestao do New Relic;
 - variable opcional `EKS_PUBLIC_ACCESS_CIDRS` em formato JSON, por exemplo
   `["203.0.113.10/32"]`. Sem essa variable, a pipeline usa `["0.0.0.0/0"]`
   como bypass para permitir que runners efemeros acessem os providers
   Helm/Kubernetes;
+- variable opcional `EKS_HTTPS_EGRESS_CIDRS` em formato JSON. O fallback
+  `["0.0.0.0/0"]` permite somente TCP/443 por essa regra;
 - variable opcional `INGRESS_LOAD_BALANCER_SOURCE_RANGES` em formato JSON. Use
   `["0.0.0.0/0"]` para acesso publico ou restrinja ao CIDR da equipe;
 - Environment secrets `HOMOLOG_AUTH_DB_PASSWORD`,
@@ -149,6 +160,54 @@ aprovacao antes de receber os secrets. As URLs PostgreSQL sao montadas pelo
 Terraform com os endpoints RDS e nunca devem ser cadastradas manualmente no Git.
 
 As credenciais do AWS Academy expiram. Atualize os tres secrets AWS antes de executar o pipeline. Pull Requests vindos de forks nao recebem secrets e, portanto, nao conseguem executar `init`/`plan` contra o backend remoto.
+
+## OpenTelemetry Collector e New Relic
+
+O modulo `modules/opentelemetry-collector` instala uma release Helm local no
+namespace `observability`. A release cria:
+
+- Secret `newrelic-otlp`, abastecido pela variavel sensivel
+  `newrelic_license_key`;
+- ConfigMap com receiver OTLP/gRPC e OTLP/HTTP, enriquecimento de metadados
+  Kubernetes, limitador de memoria, batch, fila e retry;
+- Deployment com uma replica e probes na porta 13133;
+- Service `opentelemetry-collector` do tipo `ClusterIP` nas portas 4317 e 4318;
+- RBAC somente leitura para o processor `k8sattributes`.
+
+Os SDKs dos microservicos devem enviar traces para o endpoint interno retornado
+pelo Terraform:
+
+```bash
+terraform -chdir=environments/homolog output -raw opentelemetry_otlp_http_endpoint
+```
+
+O valor padrao e
+`http://opentelemetry-collector.observability.svc.cluster.local:4318`. A chave
+do New Relic fica apenas no pod do Collector e nao deve ser adicionada aos
+Deployments das aplicacoes.
+
+O modulo EKS adiciona uma regra explicita no cluster security group permitindo
+saida TCP/443 aos CIDRs de `eks_https_egress_cidrs`. O padrao e `0.0.0.0/0`
+porque os enderecos do endpoint SaaS podem mudar; a regra continua restrita ao
+protocolo TCP e a porta 443. A rota efetiva para a Internet depende do NAT
+Gateway permanecer habilitado para as subnets privadas.
+
+Essa regra garante a disponibilidade de HTTPS, mas nao remove outras regras de
+egress que o proprio EKS possa manter no cluster security group. Uma politica de
+saida estritamente limitada a 443 exigiria tambem um security group de nodes
+gerenciado por launch template e revisao das dependencias ECR, STS e API do EKS.
+
+Para contas New Relic fora da regiao US, altere `newrelic_otlp_endpoint` para o
+endpoint regional correspondente. Depois do apply, valide:
+
+```bash
+kubectl -n observability get deployment,pods,service
+kubectl -n observability logs deployment/opentelemetry-collector
+```
+
+O pipeline inicial do Collector exporta traces. Metricas e logs serao ligados
+em pipelines separados quando Prometheus e Loki forem adicionados, evitando
+duplicacao de ingestao no New Relic.
 
 ## Excecoes de seguranca do AWS Academy
 

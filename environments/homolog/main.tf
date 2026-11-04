@@ -58,6 +58,7 @@ module "eks" {
   kubernetes_version     = var.kubernetes_version
   endpoint_public_access = var.eks_endpoint_public_access
   public_access_cidrs    = var.eks_public_access_cidrs
+  https_egress_cidrs     = var.eks_https_egress_cidrs
   node_instance_types    = var.eks_node_instance_types
   desired_size           = var.eks_desired_size
   min_size               = var.eks_min_size
@@ -65,6 +66,19 @@ module "eks" {
   tags                   = local.common_tags
 
   depends_on = [terraform_data.academy_guardrail]
+}
+
+module "opentelemetry_collector" {
+  count  = var.install_opentelemetry_collector ? 1 : 0
+  source = "../../modules/opentelemetry-collector"
+
+  namespace              = var.opentelemetry_namespace
+  image_tag              = var.opentelemetry_collector_image_tag
+  replica_count          = var.opentelemetry_collector_replicas
+  newrelic_otlp_endpoint = var.newrelic_otlp_endpoint
+  newrelic_license_key   = var.newrelic_license_key
+
+  depends_on = [module.eks]
 }
 
 module "rds" {

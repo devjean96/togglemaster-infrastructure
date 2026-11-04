@@ -51,6 +51,16 @@ variable "eks_public_access_cidrs" {
     error_message = "Informe pelo menos um CIDR para acesso ao endpoint do EKS."
   }
 }
+variable "eks_https_egress_cidrs" {
+  description = "CIDRs autorizados como destino da saida TCP/443 dos nodes EKS."
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+
+  validation {
+    condition     = length(var.eks_https_egress_cidrs) > 0 && alltrue([for cidr in var.eks_https_egress_cidrs : can(cidrnetmask(cidr))])
+    error_message = "Informe ao menos um CIDR IPv4 valido para a saida HTTPS."
+  }
+}
 variable "eks_node_instance_types" {
   type    = list(string)
   default = ["t3.medium"]
@@ -146,6 +156,40 @@ variable "redis_num_cache_clusters" {
 variable "dynamodb_point_in_time_recovery" {
   type    = bool
   default = false
+}
+variable "install_opentelemetry_collector" {
+  description = "Instala o OpenTelemetry Collector gateway no EKS."
+  type        = bool
+  default     = true
+}
+variable "opentelemetry_namespace" {
+  type    = string
+  default = "observability"
+}
+variable "opentelemetry_collector_image_tag" {
+  description = "Versao da imagem otel/opentelemetry-collector-contrib."
+  type        = string
+  default     = "0.164.0"
+}
+variable "opentelemetry_collector_replicas" {
+  description = "Uma replica e suficiente para o ambiente de homologacao no AWS Academy."
+  type        = number
+  default     = 1
+}
+variable "newrelic_otlp_endpoint" {
+  description = "Endpoint OTLP/HTTP do New Relic correspondente a regiao da conta."
+  type        = string
+  default     = "https://otlp.nr-data.net"
+}
+variable "newrelic_license_key" {
+  description = "License key de ingestao do New Relic. Forneca por TF_VAR_newrelic_license_key."
+  type        = string
+  sensitive   = true
+
+  validation {
+    condition     = length(trimspace(var.newrelic_license_key)) >= 32
+    error_message = "newrelic_license_key deve possuir pelo menos 32 caracteres."
+  }
 }
 variable "install_argocd" {
   type    = bool

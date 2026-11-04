@@ -7,6 +7,7 @@ on:
       - "**/*.hcl"
       - "modules/argocd/bootstrap-chart/**"
       - "modules/workload-secrets/chart/**"
+      - "modules/opentelemetry-collector/chart/**"
       - ".github/workflows/terraform.yml"
   push:
     branches: [main]
@@ -15,6 +16,7 @@ on:
       - "**/*.hcl"
       - "modules/argocd/bootstrap-chart/**"
       - "modules/workload-secrets/chart/**"
+      - "modules/opentelemetry-collector/chart/**"
       - ".github/workflows/terraform.yml"
   workflow_dispatch:
 
@@ -31,6 +33,7 @@ env:
   AWS_REGION: us-east-1
   AWS_DEFAULT_REGION: us-east-1
   TF_VAR_eks_public_access_cidrs: ${{ vars.EKS_PUBLIC_ACCESS_CIDRS || '["0.0.0.0/0"]' }}
+  TF_VAR_eks_https_egress_cidrs: ${{ vars.EKS_HTTPS_EGRESS_CIDRS || '["0.0.0.0/0"]' }}
   TF_VAR_ingress_load_balancer_source_ranges: ${{ vars.INGRESS_LOAD_BALANCER_SOURCE_RANGES || '["0.0.0.0/0"]' }}
 
 jobs:
@@ -44,6 +47,7 @@ jobs:
       TF_VAR_targeting_db_password: ${{ secrets.HOMOLOG_TARGETING_DB_PASSWORD }}
       TF_VAR_auth_master_key: ${{ secrets.HOMOLOG_AUTH_MASTER_KEY }}
       TF_VAR_evaluation_service_api_key: ${{ secrets.HOMOLOG_EVALUATION_SERVICE_API_KEY }}
+      TF_VAR_newrelic_license_key: ${{ secrets.HOMOLOG_NEW_RELIC_LICENSE_KEY }}
 
     steps:
       - name: Checkout
@@ -117,6 +121,7 @@ jobs:
       TF_VAR_targeting_db_password: ${{ secrets.HOMOLOG_TARGETING_DB_PASSWORD }}
       TF_VAR_auth_master_key: ${{ secrets.HOMOLOG_AUTH_MASTER_KEY }}
       TF_VAR_evaluation_service_api_key: ${{ secrets.HOMOLOG_EVALUATION_SERVICE_API_KEY }}
+      TF_VAR_newrelic_license_key: ${{ secrets.HOMOLOG_NEW_RELIC_LICENSE_KEY }}
 
     steps:
       - name: Checkout
