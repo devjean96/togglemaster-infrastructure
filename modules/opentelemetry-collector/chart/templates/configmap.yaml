@@ -75,3 +75,7 @@ data:
           receivers: [otlp]
           processors: [memory_limiter, k8sattributes, resource/togglemaster, batch]
           exporters: [otlphttp/newrelic]
+        metrics:
+          receivers: [otlp]
+          processors: [memory_limiter, k8sattributes, resource/togglemaster, batch]
+          exporters: [otlphttp/newrelic]

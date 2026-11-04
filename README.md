@@ -171,7 +171,8 @@ namespace `observability`. A release cria:
 - ConfigMap com receiver OTLP/gRPC e OTLP/HTTP, enriquecimento de metadados
   Kubernetes, limitador de memoria, batch, fila e retry;
 - Deployment com uma replica e probes na porta 13133;
-- Service `opentelemetry-collector` do tipo `ClusterIP` nas portas 4317 e 4318;
+- Service `opentelemetry-collector` do tipo `ClusterIP` nas portas OTLP 4317 e
+  4318;
 - RBAC somente leitura para o processor `k8sattributes`.
 
 Os SDKs dos microservicos devem enviar traces para o endpoint interno retornado
@@ -205,9 +206,9 @@ kubectl -n observability get deployment,pods,service
 kubectl -n observability logs deployment/opentelemetry-collector
 ```
 
-O pipeline inicial do Collector exporta traces. Metricas e logs serao ligados
-em pipelines separados quando Prometheus e Loki forem adicionados, evitando
-duplicacao de ingestao no New Relic.
+O Collector exporta traces e metricas OTLP ao New Relic. Os logs OTLP
+permanecem desativados. Prometheus, Loki e Grafana nao fazem parte deste modulo
+e devem ser adicionados separadamente por seus respectivos responsaveis.
 
 ## Excecoes de seguranca do AWS Academy
 
