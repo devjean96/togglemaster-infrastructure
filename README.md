@@ -57,18 +57,30 @@ Antes do apply, confirme que a LabRole possui as permissoes e a trust policy nec
 
 ## 1. Criar o backend
 
-O bootstrap usa state local somente para criar o bucket S3. Escolha um nome globalmente unico:
+O bootstrap usa state local e cria o bucket S3 de forma idempotente. Por padrao,
+o nome e montado automaticamente como
+`togglemaster-terraform-state-<ACCOUNT_ID_ATIVO>`:
 
 ```bash
 cd bootstrap
 cp terraform.tfvars.example terraform.tfvars
-# edite state_bucket_name
 terraform init
 terraform plan
 terraform apply
 ```
 
-O bucket possui versionamento, criptografia SSE-S3, bloqueio integral de acesso publico, ownership enforced e uma policy que nega transporte sem TLS. `prevent_destroy` reduz o risco de apagar o state.
+`state_bucket_name` permanece disponivel como override opcional. No AWS
+Academy, prefira o valor automatico porque a conta do laboratorio pode mudar
+entre sessoes.
+
+No AWS Academy, a SCP bloqueia `s3:GetBucketObjectLockConfiguration`, mas o
+resource `aws_s3_bucket` executa essa leitura em todo refresh. Por isso, o
+bootstrap cria o bucket via AWS CLI e o trata como externo no Terraform; se o
+bucket ja existir e estiver acessivel, ele sera reutilizado. O Terraform ainda
+gerencia versionamento, criptografia SSE-S3, bloqueio integral de acesso
+publico, ownership enforced e a policy que nega transporte sem TLS. Como o
+bucket nao e um resource Terraform, um `terraform destroy` no bootstrap nao o
+remove.
 
 O locking usa o arquivo de lock nativo do backend S3 (`use_lockfile = true`), disponivel a partir do Terraform 1.10. Nao e criada tabela DynamoDB para lock.
 
@@ -308,8 +320,9 @@ export AWS_SESSION_TOKEN="..."
 Por seguranca, o bucket versionado que armazena o state e preservado por padrao.
 Depois que todos os recursos tiverem sido destruidos, use
 `--delete-state-bucket` para remover tambem todas as versoes do state e o bucket.
-Essa opcao e irreversivel e faz o state local do diretorio `bootstrap` deixar de
-representar a AWS.
+Essa opcao e irreversivel. Se o bootstrap for aplicado novamente depois da
+exclusao, use `terraform apply -replace=terraform_data.state_bucket` para
+executar novamente a etapa de criacao do bucket.
 
 ```bash
 ./scripts/destroy-academy.sh \

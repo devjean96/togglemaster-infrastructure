@@ -5,11 +5,12 @@ variable "aws_region" {
 }
 
 variable "state_bucket_name" {
-  description = "Nome globalmente unico do bucket S3 de state."
+  description = "Nome globalmente unico do bucket S3 de state. Quando omitido, usa o ID da conta AWS ativa."
   type        = string
+  default     = null
 
   validation {
-    condition     = length(var.state_bucket_name) >= 3 && length(var.state_bucket_name) <= 63
+    condition     = var.state_bucket_name == null || (length(var.state_bucket_name) >= 3 && length(var.state_bucket_name) <= 63)
     error_message = "O nome do bucket deve ter entre 3 e 63 caracteres."
   }
 }
