@@ -63,19 +63,19 @@ variable "eks_https_egress_cidrs" {
 }
 variable "eks_node_instance_types" {
   type    = list(string)
-  default = ["t3.medium"]
+  default = ["t3.large"]
 }
 variable "eks_desired_size" {
   type    = number
-  default = 2
+  default = 3
 }
 variable "eks_min_size" {
   type    = number
-  default = 2
+  default = 3
 }
 variable "eks_max_size" {
   type    = number
-  default = 2
+  default = 3
 }
 variable "db_username" {
   type    = string

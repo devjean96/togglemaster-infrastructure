@@ -127,7 +127,12 @@ Use senhas com pelo menos 16 caracteres. Para reduzir exposicao do endpoint do E
 
 O NAT Gateway permite que nodes privados acessem ECR e endpoints externos, mas cobra por hora e por trafego. Em laboratorios onde o custo for impeditivo, desabilite `enable_nat_gateway` somente se fornecer outra rota de saida ou VPC endpoints; sem saida, os nodes podem nao iniciar corretamente.
 
-O ambiente usa uma configuracao economica: um node EKS, instancias RDS `db.t3.micro` sem Multi-AZ, um node Redis `cache.t3.micro` e backups reduzidos. Isso evita duplicar clusters, bancos e repositorios ECR sem remover os componentes obrigatorios. Revise quotas e disponibilidade dos tipos `t3`/`db.t3`/`cache.t3` na conta Academy antes do apply.
+O ambiente usa tres nodes EKS `t3.large` em um unico Managed Node Group para
+acomodar os microservicos e a stack completa de observabilidade. As instancias
+RDS `db.t3.micro` permanecem sem Multi-AZ, o Redis usa um node
+`cache.t3.micro` e os backups continuam reduzidos. Revise as quotas, o saldo do
+laboratorio e a disponibilidade dos tipos `t3`/`db.t3`/`cache.t3` na conta AWS
+Academy antes do apply.
 
 O Ingress NGINX cria um Network Load Balancer, que possui cobranca por hora e
 por uso. Restrinja `ingress_load_balancer_source_ranges` ao CIDR publico da

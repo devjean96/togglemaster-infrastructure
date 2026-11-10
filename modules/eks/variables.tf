@@ -38,7 +38,7 @@ variable "https_egress_cidrs" {
 }
 variable "node_instance_types" {
   type    = list(string)
-  default = ["t3.medium"]
+  default = ["t3.large"]
 }
 variable "capacity_type" {
   type    = string

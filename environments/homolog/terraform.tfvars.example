@@ -6,6 +6,13 @@ kubernetes_version      = "1.36"
 argocd_chart_version    = "10.4.1"
 ingress_nginx_chart_version = "4.15.1"
 
+# Capacidade recomendada para os microservicos e a stack completa de
+# observabilidade (OpenTelemetry, Prometheus, Loki e Grafana).
+eks_node_instance_types = ["t3.large"]
+eks_desired_size        = 3
+eks_min_size            = 3
+eks_max_size            = 3
+
 # Restrinja ao CIDR publico da equipe sempre que possivel.
 eks_public_access_cidrs = ["203.0.113.10/32"]
 
