@@ -27,7 +27,7 @@ eks_https_egress_cidrs = ["0.0.0.0/0"]
 # https://otlp.jp.nr-data.net para contas JP.
 newrelic_otlp_endpoint = "https://otlp.nr-data.net"
 
-# Loki monolitico com armazenamento EBS gp3 e retencao de sete dias.
+# Loki monolitico com volume local temporario e retencao maxima de sete dias.
 install_loki          = true
 loki_chart_version    = "21.1.0"
 loki_storage_size     = "20Gi"

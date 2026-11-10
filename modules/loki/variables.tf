@@ -16,14 +16,8 @@ variable "chart_version" {
   default     = "21.1.0"
 }
 
-variable "storage_class_name" {
-  description = "StorageClass gp3 dedicada ao Loki."
-  type        = string
-  default     = "togglemaster-gp3"
-}
-
 variable "storage_size" {
-  description = "Tamanho do PVC do Loki monolitico."
+  description = "Limite do volume local temporario do Loki monolitico."
   type        = string
   default     = "20Gi"
 

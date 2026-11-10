@@ -202,7 +202,7 @@ variable "loki_chart_version" {
   default     = "21.1.0"
 }
 variable "loki_storage_size" {
-  description = "Tamanho do volume EBS gp3 persistente do Loki."
+  description = "Limite do volume local temporario do Loki."
   type        = string
   default     = "20Gi"
 }

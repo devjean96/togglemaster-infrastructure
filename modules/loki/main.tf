@@ -1,20 +1,3 @@
-resource "kubernetes_storage_class_v1" "this" {
-  metadata {
-    name = var.storage_class_name
-  }
-
-  storage_provisioner    = "ebs.csi.aws.com"
-  reclaim_policy         = "Retain"
-  volume_binding_mode    = "WaitForFirstConsumer"
-  allow_volume_expansion = true
-
-  parameters = {
-    type      = "gp3"
-    encrypted = "true"
-    fsType    = "ext4"
-  }
-}
-
 resource "helm_release" "this" {
   name             = "loki"
   repository       = var.chart_repository
@@ -69,12 +52,12 @@ resource "helm_release" "this" {
       replicas = 1
       sidecar  = false
       persistence = {
-        enabled      = true
-        accessModes  = ["ReadWriteOnce"]
-        size         = var.storage_size
-        storageClass = kubernetes_storage_class_v1.this.metadata[0].name
-        whenDeleted  = "Retain"
-        whenScaled   = "Retain"
+        enabled = false
+        dataVolumeParameters = {
+          emptyDir = {
+            sizeLimit = var.storage_size
+          }
+        }
       }
       podDisruptionBudget = {
         enabled = false
@@ -131,6 +114,4 @@ resource "helm_release" "this" {
       }
     }
   })]
-
-  depends_on = [kubernetes_storage_class_v1.this]
 }
