@@ -19,6 +19,11 @@ resource "helm_release" "this" {
       endpoint   = var.newrelic_otlp_endpoint
       licenseKey = var.newrelic_license_key
     }
+    logs = {
+      enabled      = var.enable_loki_logs
+      lokiEndpoint = var.loki_otlp_endpoint
+      resources    = var.log_collector_resources
+    }
     resources = var.resources
   })]
 }

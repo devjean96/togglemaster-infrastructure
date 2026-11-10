@@ -5,7 +5,8 @@ Infraestrutura como codigo do ToggleMaster, provisionada com Terraform na AWS. P
 ## Recursos provisionados
 
 - VPC, Internet Gateway, duas subnets publicas e duas privadas, tabelas de rotas e NAT Gateway opcional.
-- EKS com Managed Node Group nas subnets privadas e add-ons `vpc-cni`, `kube-proxy` e `coredns`.
+- EKS com Managed Node Group nas subnets privadas e add-ons `vpc-cni`,
+  `kube-proxy`, `coredns`, `metrics-server` e `aws-ebs-csi-driver`.
 - Tres instancias RDS PostgreSQL: `auth`, `flags` e `targeting`.
 - ElastiCache Redis.
 - DynamoDB `ToggleMasterAnalytics-<ambiente>` com capacidade sob demanda.
@@ -18,8 +19,10 @@ Infraestrutura como codigo do ToggleMaster, provisionada com Terraform na AWS. P
 - ArgoCD instalado no EKS pelo chart Helm oficial e root Application criada pelo
   mesmo `terraform apply` para iniciar a reconciliacao GitOps.
 - OpenTelemetry Collector em modo gateway, exposto somente por Service
-  `ClusterIP` nas portas OTLP 4317/4318 e exportando traces ao New Relic por
-  HTTPS/443.
+  `ClusterIP` nas portas OTLP 4317/4318 e exportando traces e metricas ao New
+  Relic por HTTPS/443.
+- Loki monolitico com volume EBS `gp3`, gateway `ClusterIP`, retencao de sete
+  dias e OpenTelemetry Collector de logs executado como DaemonSet.
 
 ## Estrutura
 
@@ -36,6 +39,7 @@ togglemaster-infrastructure/
 │   ├── ecr/
 │   ├── workload-secrets/
 │   ├── opentelemetry-collector/
+│   ├── loki/
 │   ├── ingress-nginx/
 │   └── argocd/
 ├── environments/
@@ -224,8 +228,54 @@ kubectl -n observability logs deployment/opentelemetry-collector
 ```
 
 O Collector exporta traces e metricas OTLP ao New Relic. Os logs OTLP
-permanecem desativados. Prometheus, Loki e Grafana nao fazem parte deste modulo
-e devem ser adicionados separadamente por seus respectivos responsaveis.
+dos SDKs permanecem desativados para evitar duplicidade: os microsservicos
+escrevem em `stdout`/`stderr`, e o Collector em DaemonSet coleta os arquivos dos
+containers. Prometheus e Grafana permanecem fora deste modulo.
+
+## Loki e coleta de logs
+
+O modulo `modules/loki` instala o chart `grafana-community/loki` fixado na
+versao declarada por `loki_chart_version`. Para reduzir custo e complexidade no
+AWS Academy, o Loki usa o modo monolitico com uma replica, autenticacao
+desativada somente na rede interna do cluster e gateway `ClusterIP`.
+
+O armazenamento usa um PVC de `20Gi` provisionado pela StorageClass
+`togglemaster-gp3`. O add-on `aws-ebs-csi-driver` e instalado no EKS para
+provisionar o volume. O reclaim policy e `Retain`, e os logs possuem retencao
+padrao de `168h` (sete dias). Prometheus, Grafana, dashboards e ServiceMonitors
+nao sao instalados por esta etapa.
+
+Quando `install_loki=true`, a release do OpenTelemetry tambem cria o DaemonSet
+`opentelemetry-collector-logs`, com uma replica em cada node. Cada agente le
+`/var/log/pods`, enriquece os registros com namespace, pod, container, node,
+`service.name`, `service.version` e ambiente, e envia os logs pelo endpoint
+OTLP/HTTP nativo do Loki:
+
+```text
+http://loki-gateway.observability.svc.cluster.local/otlp
+```
+
+Depois do apply, valide:
+
+```bash
+kubectl -n observability get statefulset,deployment,daemonset,pods,service,pvc
+kubectl -n observability rollout status statefulset/loki
+kubectl -n observability rollout status daemonset/opentelemetry-collector-logs
+kubectl -n observability logs daemonset/opentelemetry-collector-logs --tail=100
+```
+
+Teste a prontidao do Loki a partir do cluster:
+
+```bash
+kubectl -n observability port-forward service/loki 3100:3100
+curl --fail http://127.0.0.1:3100/ready
+```
+
+O endpoint interno para uma futura configuracao do Data Source no Grafana e:
+
+```bash
+terraform -chdir=environments/homolog output -raw loki_gateway_endpoint
+```
 
 ## Excecoes de seguranca do AWS Academy
 

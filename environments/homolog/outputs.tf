@@ -36,6 +36,17 @@ output "opentelemetry_otlp_grpc_endpoint" {
   description = "Endpoint interno que os SDKs OpenTelemetry devem usar com OTLP/gRPC."
   value       = try(module.opentelemetry_collector[0].otlp_grpc_endpoint, null)
 }
+output "loki_namespace" {
+  value = try(module.loki[0].namespace, null)
+}
+output "loki_gateway_endpoint" {
+  description = "Endpoint HTTP interno para consultas ao Loki."
+  value       = try(module.loki[0].gateway_endpoint, null)
+}
+output "loki_otlp_endpoint" {
+  description = "Endpoint OTLP/HTTP interno usado pelo Collector de logs."
+  value       = try(module.loki[0].otlp_endpoint, null)
+}
 output "ingress_nginx_namespace" {
   value = try(module.ingress_nginx[0].namespace, null)
 }

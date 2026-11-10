@@ -68,6 +68,18 @@ module "eks" {
   depends_on = [terraform_data.academy_guardrail]
 }
 
+module "loki" {
+  count  = var.install_loki ? 1 : 0
+  source = "../../modules/loki"
+
+  namespace        = var.opentelemetry_namespace
+  chart_version    = var.loki_chart_version
+  storage_size     = var.loki_storage_size
+  retention_period = var.loki_retention_period
+
+  depends_on = [module.eks]
+}
+
 module "opentelemetry_collector" {
   count  = var.install_opentelemetry_collector ? 1 : 0
   source = "../../modules/opentelemetry-collector"
@@ -77,8 +89,10 @@ module "opentelemetry_collector" {
   replica_count          = var.opentelemetry_collector_replicas
   newrelic_otlp_endpoint = var.newrelic_otlp_endpoint
   newrelic_license_key   = var.newrelic_license_key
+  enable_loki_logs       = var.install_loki
+  loki_otlp_endpoint     = try(module.loki[0].otlp_endpoint, "")
 
-  depends_on = [module.eks]
+  depends_on = [module.eks, module.loki]
 }
 
 module "rds" {

@@ -53,7 +53,7 @@ variable "min_size" { type = number }
 variable "max_size" { type = number }
 variable "cluster_addons" {
   type    = list(string)
-  default = ["coredns", "kube-proxy", "vpc-cni", "metrics-server"]
+  default = ["coredns", "kube-proxy", "vpc-cni", "metrics-server", "aws-ebs-csi-driver"]
 }
 variable "enabled_cluster_log_types" {
   type    = list(string)

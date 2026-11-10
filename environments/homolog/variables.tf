@@ -191,6 +191,26 @@ variable "newrelic_license_key" {
     error_message = "newrelic_license_key deve possuir pelo menos 32 caracteres."
   }
 }
+variable "install_loki" {
+  description = "Instala o Loki monolitico e habilita a coleta de logs dos pods."
+  type        = bool
+  default     = true
+}
+variable "loki_chart_version" {
+  description = "Versao fixa do chart grafana-community/loki."
+  type        = string
+  default     = "21.1.0"
+}
+variable "loki_storage_size" {
+  description = "Tamanho do volume EBS gp3 persistente do Loki."
+  type        = string
+  default     = "20Gi"
+}
+variable "loki_retention_period" {
+  description = "Retencao de logs do Loki em horas."
+  type        = string
+  default     = "168h"
+}
 variable "install_argocd" {
   type    = bool
   default = true

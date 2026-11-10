@@ -2,8 +2,8 @@ academy_mode = true
 lab_role_arn = "arn:aws:iam::123456789012:role/LabRole"
 
 # Par de versoes compativel: ArgoCD 3.5.2 inclui schemas do Kubernetes 1.36.
-kubernetes_version      = "1.36"
-argocd_chart_version    = "10.4.1"
+kubernetes_version           = "1.36"
+argocd_chart_version         = "10.4.1"
 ingress_nginx_chart_version = "4.15.1"
 
 # Capacidade recomendada para os microservicos e a stack completa de
@@ -27,6 +27,12 @@ eks_https_egress_cidrs = ["0.0.0.0/0"]
 # https://otlp.jp.nr-data.net para contas JP.
 newrelic_otlp_endpoint = "https://otlp.nr-data.net"
 
+# Loki monolitico com armazenamento EBS gp3 e retencao de sete dias.
+install_loki          = true
+loki_chart_version    = "21.1.0"
+loki_storage_size     = "20Gi"
+loki_retention_period = "168h"
+
 # Passe senhas e chaves via TF_VAR_*; nao grave segredos neste arquivo.
 # TF_VAR_auth_master_key e TF_VAR_evaluation_service_api_key devem possuir
 # pelo menos 32 caracteres. A license key tambem deve ser informada por
@@ -34,4 +40,4 @@ newrelic_otlp_endpoint = "https://otlp.nr-data.net"
 
 # O Terraform instala o ArgoCD e cria a root Application que observa este repositorio.
 argocd_bootstrap_gitops = true
-gitops_repository_url  = "https://github.com/devjean96/togglemaster-gitops.git"
+gitops_repository_url   = "https://github.com/devjean96/togglemaster-gitops.git"

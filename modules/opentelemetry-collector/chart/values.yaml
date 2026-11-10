@@ -8,6 +8,17 @@ newRelic:
   endpoint: https://otlp.nr-data.net
   licenseKey: ""
 
+logs:
+  enabled: false
+  lokiEndpoint: ""
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 300m
+      memory: 256Mi
+
 resources:
   requests:
     cpu: 100m

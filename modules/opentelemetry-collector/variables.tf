@@ -49,6 +49,23 @@ variable "newrelic_license_key" {
   }
 }
 
+variable "enable_loki_logs" {
+  description = "Cria um Collector em DaemonSet para ler stdout/stderr dos pods."
+  type        = bool
+  default     = false
+}
+
+variable "loki_otlp_endpoint" {
+  description = "Endpoint base OTLP/HTTP interno do Loki, terminado em /otlp."
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = !var.enable_loki_logs || can(regex("^http://[^/]+/otlp$", var.loki_otlp_endpoint))
+    error_message = "loki_otlp_endpoint deve ser um endpoint HTTP interno terminado em /otlp quando a coleta estiver habilitada."
+  }
+}
+
 variable "resources" {
   description = "Requests e limits do Collector, ajustados para o AWS Academy."
   type = object({
@@ -62,6 +79,24 @@ variable "resources" {
     }
     limits = {
       cpu    = "500m"
+      memory = "256Mi"
+    }
+  }
+}
+
+variable "log_collector_resources" {
+  description = "Requests e limits de cada Collector de logs executado por node."
+  type = object({
+    requests = map(string)
+    limits   = map(string)
+  })
+  default = {
+    requests = {
+      cpu    = "100m"
+      memory = "128Mi"
+    }
+    limits = {
+      cpu    = "300m"
       memory = "256Mi"
     }
   }
