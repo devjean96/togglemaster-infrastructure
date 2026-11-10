@@ -48,6 +48,10 @@ jobs:
       TF_VAR_auth_master_key: ${{ secrets.HOMOLOG_AUTH_MASTER_KEY }}
       TF_VAR_evaluation_service_api_key: ${{ secrets.HOMOLOG_EVALUATION_SERVICE_API_KEY }}
       TF_VAR_newrelic_license_key: ${{ secrets.HOMOLOG_NEW_RELIC_LICENSE_KEY }}
+      TF_VAR_grafana_admin_password: ${{ secrets.HOMOLOG_GRAFANA_ADMIN_PASSWORD }}
+      TF_VAR_pagerduty_integration_key: ${{ secrets.HOMOLOG_PAGERDUTY_INTEGRATION_KEY }}
+      TF_VAR_discord_webhook_url: ${{ secrets.HOMOLOG_DISCORD_WEBHOOK_URL }}
+      TF_VAR_self_healer_token: ${{ secrets.HOMOLOG_SELF_HEALER_TOKEN }}
 
     steps:
       - name: Checkout
@@ -122,6 +126,10 @@ jobs:
       TF_VAR_auth_master_key: ${{ secrets.HOMOLOG_AUTH_MASTER_KEY }}
       TF_VAR_evaluation_service_api_key: ${{ secrets.HOMOLOG_EVALUATION_SERVICE_API_KEY }}
       TF_VAR_newrelic_license_key: ${{ secrets.HOMOLOG_NEW_RELIC_LICENSE_KEY }}
+      TF_VAR_grafana_admin_password: ${{ secrets.HOMOLOG_GRAFANA_ADMIN_PASSWORD }}
+      TF_VAR_pagerduty_integration_key: ${{ secrets.HOMOLOG_PAGERDUTY_INTEGRATION_KEY }}
+      TF_VAR_discord_webhook_url: ${{ secrets.HOMOLOG_DISCORD_WEBHOOK_URL }}
+      TF_VAR_self_healer_token: ${{ secrets.HOMOLOG_SELF_HEALER_TOKEN }}
 
     steps:
       - name: Checkout

@@ -75,11 +75,11 @@ variable "resources" {
   default = {
     requests = {
       cpu    = "100m"
-      memory = "128Mi"
+      memory = "192Mi"
     }
     limits = {
       cpu    = "500m"
-      memory = "256Mi"
+      memory = "384Mi"
     }
   }
 }
@@ -100,4 +100,16 @@ variable "log_collector_resources" {
       memory = "256Mi"
     }
   }
+}
+
+variable "enable_prometheus_metrics" {
+  description = "Gera metricas RED (spanmetrics) a partir dos traces e envia ao Prometheus."
+  type        = bool
+  default     = false
+}
+
+variable "prometheus_otlp_endpoint" {
+  description = "Endpoint OTLP/HTTP do Prometheus 3, sem o sufixo /v1/metrics."
+  type        = string
+  default     = "http://prometheus-server.observability.svc.cluster.local/api/v1/otlp"
 }

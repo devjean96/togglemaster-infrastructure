@@ -18,6 +18,23 @@ data:
           http:
             endpoint: 0.0.0.0:4318
 
+    {{- if .Values.prometheus.enabled }}
+    connectors:
+      # Fase 4: transforma cada span em metricas RED (Rate, Errors, Duration).
+      # Mesma metrica para Go e Python -> dashboard e alerta padronizados.
+      spanmetrics:
+        namespace: traces.span.metrics
+        metrics_flush_interval: 15s
+        histogram:
+          explicit:
+            buckets: [5ms, 10ms, 25ms, 50ms, 100ms, 250ms, 500ms, 1s, 2500ms, 5s]
+        dimensions:
+          - name: http.request.method
+          - name: http.response.status_code
+          - name: http.status_code
+          - name: http.route
+    {{- end }}
+
     processors:
       memory_limiter:
         check_interval: 1s
@@ -64,6 +81,15 @@ data:
           enabled: true
           num_consumers: 2
           queue_size: 1000
+      {{- if .Values.prometheus.enabled }}
+      # Receptor OTLP nativo do Prometheus 3 (flag --web.enable-otlp-receiver).
+      otlphttp/prometheus:
+        endpoint: {{ required "prometheus.otlpEndpoint is required" .Values.prometheus.otlpEndpoint | quote }}
+        tls:
+          insecure: true
+        retry_on_failure:
+          enabled: true
+      {{- end }}
 
     service:
       extensions: [health_check]
@@ -74,8 +100,15 @@ data:
         traces:
           receivers: [otlp]
           processors: [memory_limiter, k8sattributes, resource/togglemaster, batch]
-          exporters: [otlphttp/newrelic]
+          exporters: [otlphttp/newrelic{{ if .Values.prometheus.enabled }}, spanmetrics{{ end }}]
         metrics:
           receivers: [otlp]
           processors: [memory_limiter, k8sattributes, resource/togglemaster, batch]
           exporters: [otlphttp/newrelic]
+        {{- if .Values.prometheus.enabled }}
+        # Metricas RED geradas a partir dos traces -> Prometheus
+        metrics/spanmetrics:
+          receivers: [spanmetrics]
+          processors: [memory_limiter, batch]
+          exporters: [otlphttp/prometheus]
+        {{- end }}

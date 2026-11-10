@@ -90,9 +90,26 @@ module "opentelemetry_collector" {
   newrelic_otlp_endpoint = var.newrelic_otlp_endpoint
   newrelic_license_key   = var.newrelic_license_key
   enable_loki_logs       = var.install_loki
-  loki_otlp_endpoint     = try(module.loki[0].otlp_endpoint, "")
+  # Fase 4: metricas RED -> Prometheus (instalado pelo ArgoCD no namespace observability)
+  enable_prometheus_metrics = var.enable_prometheus_metrics
+  loki_otlp_endpoint        = try(module.loki[0].otlp_endpoint, "")
 
   depends_on = [module.eks, module.loki]
+}
+
+# Fase 4: segredos do Grafana/alertas (a stack em si e instalada pelo ArgoCD).
+module "observability_secrets" {
+  count  = var.install_opentelemetry_collector ? 1 : 0
+  source = "../../modules/observability-secrets"
+
+  namespace                 = var.opentelemetry_namespace
+  grafana_admin_password    = var.grafana_admin_password
+  pagerduty_integration_key = var.pagerduty_integration_key
+  discord_webhook_url       = var.discord_webhook_url
+  self_healer_token         = var.self_healer_token
+
+  # O namespace "observability" e criado pelo helm_release do Collector.
+  depends_on = [module.opentelemetry_collector]
 }
 
 module "rds" {
