@@ -216,6 +216,11 @@ variable "enable_prometheus_metrics" {
   type        = bool
   default     = true
 }
+variable "install_observability_secrets" {
+  description = "Cria os Secrets consumidos pelo Grafana e pelo self-healer, independentemente do OTel Collector."
+  type        = bool
+  default     = true
+}
 variable "install_argocd" {
   type    = bool
   default = true
