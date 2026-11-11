@@ -68,11 +68,18 @@ module "eks" {
   depends_on = [terraform_data.academy_guardrail]
 }
 
+module "observability_namespace" {
+  source = "../../modules/observability-namespace"
+
+  namespace  = var.opentelemetry_namespace
+  depends_on = [module.eks]
+}
+
 module "loki" {
   count  = var.install_loki ? 1 : 0
   source = "../../modules/loki"
 
-  namespace        = var.opentelemetry_namespace
+  namespace        = module.observability_namespace.namespace
   chart_version    = var.loki_chart_version
   storage_size     = var.loki_storage_size
   retention_period = var.loki_retention_period
@@ -84,15 +91,29 @@ module "opentelemetry_collector" {
   count  = var.install_opentelemetry_collector ? 1 : 0
   source = "../../modules/opentelemetry-collector"
 
-  namespace              = var.opentelemetry_namespace
+  namespace              = module.observability_namespace.namespace
   image_tag              = var.opentelemetry_collector_image_tag
   replica_count          = var.opentelemetry_collector_replicas
   newrelic_otlp_endpoint = var.newrelic_otlp_endpoint
   newrelic_license_key   = var.newrelic_license_key
   enable_loki_logs       = var.install_loki
-  loki_otlp_endpoint     = try(module.loki[0].otlp_endpoint, "")
+  # Fase 4: metricas RED -> Prometheus (instalado pelo ArgoCD no namespace observability)
+  enable_prometheus_metrics = var.enable_prometheus_metrics
+  loki_otlp_endpoint        = try(module.loki[0].otlp_endpoint, "")
 
   depends_on = [module.eks, module.loki]
+}
+
+# Fase 4: segredos do Grafana/alertas (a stack em si e instalada pelo ArgoCD).
+module "observability_secrets" {
+  count  = var.install_observability_secrets ? 1 : 0
+  source = "../../modules/observability-secrets"
+
+  namespace                 = module.observability_namespace.namespace
+  grafana_admin_password    = var.grafana_admin_password
+  pagerduty_integration_key = var.pagerduty_integration_key
+  discord_webhook_url       = var.discord_webhook_url
+  self_healer_token         = var.self_healer_token
 }
 
 module "rds" {

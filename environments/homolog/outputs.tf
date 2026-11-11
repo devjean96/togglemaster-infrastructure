@@ -67,3 +67,9 @@ output "microservice_external_urls" {
     analytics  = "http://${module.ingress_nginx[0].load_balancer_hostname}/analytics"
   }, null)
 }
+
+output "grafana_admin_password" {
+  description = "Senha do admin do Grafana: terraform output -raw grafana_admin_password"
+  value       = try(module.observability_secrets[0].grafana_admin_password, null)
+  sensitive   = true
+}

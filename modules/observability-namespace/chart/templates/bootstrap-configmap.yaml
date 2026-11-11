@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: observability-namespace-bootstrap
+  labels:
+    app.kubernetes.io/name: observability-namespace-bootstrap
+    app.kubernetes.io/part-of: togglemaster-observability
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+data:
+  managed-by: terraform

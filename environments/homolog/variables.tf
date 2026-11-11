@@ -211,6 +211,16 @@ variable "loki_retention_period" {
   type        = string
   default     = "168h"
 }
+variable "enable_prometheus_metrics" {
+  description = "Envia as metricas RED (spanmetrics) do OTel Collector ao Prometheus da stack GitOps."
+  type        = bool
+  default     = true
+}
+variable "install_observability_secrets" {
+  description = "Cria os Secrets consumidos pelo Grafana e pelo self-healer, independentemente do OTel Collector."
+  type        = bool
+  default     = true
+}
 variable "install_argocd" {
   type    = bool
   default = true
@@ -248,4 +258,30 @@ variable "gitops_target_revision" {
 variable "tags" {
   type    = map(string)
   default = {}
+}
+
+# ---------------------------------------------------------------- Fase 4
+variable "grafana_admin_password" {
+  description = "Senha do admin do Grafana (TF_VAR_grafana_admin_password). Vazio = gerada."
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+variable "pagerduty_integration_key" {
+  description = "Integration key Events API v2 do PagerDuty (TF_VAR_pagerduty_integration_key)."
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+variable "discord_webhook_url" {
+  description = "Webhook do Discord para ChatOps (TF_VAR_discord_webhook_url)."
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+variable "self_healer_token" {
+  description = "Token do webhook do self-healer (TF_VAR_self_healer_token). Vazio = gerado."
+  type        = string
+  default     = ""
+  sensitive   = true
 }

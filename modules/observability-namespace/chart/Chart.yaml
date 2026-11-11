@@ -1,0 +1,6 @@
+apiVersion: v2
+name: togglemaster-observability-namespace
+description: Bootstrap idempotente do namespace de observabilidade
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

@@ -8,6 +8,11 @@ newRelic:
   endpoint: https://otlp.nr-data.net
   licenseKey: ""
 
+# Fase 4: metricas RED (spanmetrics) enviadas ao Prometheus instalado pelo ArgoCD.
+prometheus:
+  enabled: false
+  otlpEndpoint: http://prometheus-server.observability.svc.cluster.local/api/v1/otlp
+
 logs:
   enabled: false
   lokiEndpoint: ""
@@ -22,7 +27,7 @@ logs:
 resources:
   requests:
     cpu: 100m
-    memory: 128Mi
+    memory: 192Mi
   limits:
     cpu: 500m
-    memory: 256Mi
+    memory: 384Mi
