@@ -269,7 +269,7 @@ kubectl -n observability logs daemonset/opentelemetry-collector-logs --tail=100
 Teste a prontidao do Loki a partir do cluster:
 
 ```bash
-kubectl -n observability port-forward service/loki 3100:3100
+kubectl -n observability port-forward service/loki-gateway 3100:80
 curl --fail http://127.0.0.1:3100/ready
 ```
 
@@ -278,6 +278,90 @@ O endpoint interno para uma futura configuracao do Data Source no Grafana e:
 ```bash
 terraform -chdir=environments/homolog output -raw loki_gateway_endpoint
 ```
+
+## Acesso local ao Grafana e Prometheus
+
+Grafana e Prometheus sao instalados pelo ArgoCD no namespace `observability` e
+seus Services permanecem como `ClusterIP`. Portanto, as interfaces nao ficam
+publicas na Internet: o acesso administrativo local deve ser feito com
+`kubectl port-forward`.
+
+Antes de iniciar, carregue no terminal credenciais validas da sessao atual do
+AWS Academy e atualize o kubeconfig:
+
+```bash
+export AWS_ACCESS_KEY_ID="..."
+export AWS_SECRET_ACCESS_KEY="..."
+export AWS_SESSION_TOKEN="..."
+export AWS_REGION="us-east-1"
+
+aws eks update-kubeconfig \
+  --name togglemaster-homolog-eks \
+  --region us-east-1
+```
+
+Confirme que o contexto aponta para o cluster correto e que os pods e Services
+de observabilidade estao disponiveis:
+
+```bash
+kubectl config current-context
+kubectl -n observability get pods
+kubectl -n observability get services
+```
+
+### Grafana
+
+Em um terminal dedicado, encaminhe a porta local `3000` para o Service do
+Grafana:
+
+```bash
+kubectl -n observability port-forward service/grafana 3000:80
+```
+
+Mantenha o comando executando e acesse no navegador:
+
+```text
+http://localhost:3000
+```
+
+O usuario padrao e `admin`. Para consultar o usuario e a senha armazenados no
+Secret criado pelo Terraform, use:
+
+```bash
+kubectl -n observability get secret grafana-admin \
+  -o go-template='{{index .data "admin-user" | base64decode}}{{"\n"}}'
+
+kubectl -n observability get secret grafana-admin \
+  -o go-template='{{index .data "admin-password" | base64decode}}{{"\n"}}'
+```
+
+Depois do login, use `Explore` para consultar os Data Sources Prometheus e Loki
+ja provisionados pelo GitOps.
+
+### Prometheus
+
+Em outro terminal, encaminhe a porta local `9090` para o servidor Prometheus:
+
+```bash
+kubectl -n observability port-forward service/prometheus-server 9090:80
+```
+
+Mantenha o comando executando e acesse no navegador:
+
+```text
+http://localhost:9090
+```
+
+A instalacao atual nao configura autenticacao propria no Prometheus. Para
+confirmar que a coleta esta funcionando, abra a pagina de consultas e execute:
+
+```promql
+up
+```
+
+Cada `port-forward` ocupa o terminal enquanto estiver ativo e e encerrado com
+`Ctrl+C`. Se o comando informar que o Service nao foi encontrado, confirme os
+nomes instalados com `kubectl -n observability get services`.
 
 ## Excecoes de seguranca do AWS Academy
 
@@ -318,15 +402,23 @@ Para desabilitar temporariamente o bootstrap da root Application, defina
 as credenciais do repositorio no ArgoCD por um mecanismo declarativo antes do
 primeiro sync; nao grave tokens em arquivos `.tfvars`.
 
-Depois do apply, atualize o kubeconfig e obtenha a senha inicial:
+Depois do apply, atualize o kubeconfig, obtenha a senha inicial e encaminhe a
+porta local `8080` para o Service do ArgoCD:
 
 ```bash
 aws eks update-kubeconfig --name togglemaster-homolog-eks --region us-east-1
 kubectl -n argocd get secret argocd-initial-admin-secret \
-  -o jsonpath='{.data.password}' | base64 -d
+  -o go-template='{{index .data "password" | base64decode}}{{"\n"}}'
+kubectl -n argocd port-forward service/argocd-server 8080:443
 ```
 
-O Service do ArgoCD fica como `ClusterIP`. Use `kubectl port-forward` ou altere conscientemente o tipo de Service antes de expo-lo externamente.
+Mantenha o `port-forward` executando, acesse `https://localhost:8080` no
+navegador e entre com o usuario `admin` e a senha retornada pelo comando. O
+navegador pode exibir um alerta porque o certificado TLS interno do ArgoCD nao
+foi emitido para `localhost`.
+
+O Service do ArgoCD fica como `ClusterIP`. Evite altera-lo para exposicao
+publica sem antes configurar TLS valido, autenticacao e restricoes de rede.
 
 ## Acesso externo aos microservicos
 
