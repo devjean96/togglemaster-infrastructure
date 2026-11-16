@@ -10,8 +10,9 @@ resource "helm_release" "this" {
 
   values = [yamlencode({
     auth = {
-      databaseUrl = var.auth_database_url
-      masterKey   = var.auth_master_key
+      databaseUrl             = var.auth_database_url
+      masterKey               = var.auth_master_key
+      evaluationServiceApiKey = var.auth_evaluation_service_api_key
     }
     flags = {
       databaseUrl = var.flags_database_url

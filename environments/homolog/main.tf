@@ -150,6 +150,10 @@ module "workload_secrets" {
   )
   auth_master_key = var.auth_master_key
 
+  # A mesma chave consumida pelo evaluation-service e registrada pelo
+  # auth-service no bootstrap. O valor nunca e persistido no Git.
+  auth_evaluation_service_api_key = var.evaluation_service_api_key
+
   flags_database_url = format(
     "postgres://%s:%s@%s:%d/%s?sslmode=require",
     urlencode(var.db_username),

@@ -1,6 +1,7 @@
 auth:
   databaseUrl: ""
   masterKey: ""
+  evaluationServiceApiKey: ""
 flags:
   databaseUrl: ""
 targeting:
