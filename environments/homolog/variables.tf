@@ -212,7 +212,7 @@ variable "loki_retention_period" {
   default     = "168h"
 }
 variable "enable_prometheus_metrics" {
-  description = "Envia as metricas RED (spanmetrics) do OTel Collector ao Prometheus da stack GitOps."
+  description = "Envia as metricas OTLP das aplicacoes e as metricas RED (spanmetrics) ao Prometheus da stack GitOps."
   type        = bool
   default     = true
 }
@@ -274,10 +274,14 @@ variable "pagerduty_integration_key" {
   sensitive   = true
 }
 variable "discord_webhook_url" {
-  description = "Webhook do Discord para ChatOps (TF_VAR_discord_webhook_url)."
+  description = "Webhook obrigatorio do Discord para ChatOps (TF_VAR_discord_webhook_url)."
   type        = string
-  default     = ""
   sensitive   = true
+
+  validation {
+    condition     = can(regex("^https://(discord|discordapp)\\.com/api/webhooks/", trimspace(var.discord_webhook_url)))
+    error_message = "discord_webhook_url deve ser uma URL de webhook valida do Discord."
+  }
 }
 variable "self_healer_token" {
   description = "Token do webhook do self-healer (TF_VAR_self_healer_token). Vazio = gerado."

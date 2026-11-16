@@ -8,7 +8,7 @@ newRelic:
   endpoint: https://otlp.nr-data.net
   licenseKey: ""
 
-# Fase 4: metricas RED (spanmetrics) enviadas ao Prometheus instalado pelo ArgoCD.
+# Fase 4: metricas OTLP das aplicacoes e RED (spanmetrics) enviadas ao Prometheus.
 prometheus:
   enabled: false
   otlpEndpoint: http://prometheus-server.observability.svc.cluster.local/api/v1/otlp

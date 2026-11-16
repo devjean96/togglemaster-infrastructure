@@ -97,7 +97,7 @@ module "opentelemetry_collector" {
   newrelic_otlp_endpoint = var.newrelic_otlp_endpoint
   newrelic_license_key   = var.newrelic_license_key
   enable_loki_logs       = var.install_loki
-  # Fase 4: metricas RED -> Prometheus (instalado pelo ArgoCD no namespace observability)
+  # Fase 4: metricas OTLP e RED -> Prometheus (ArgoCD/namespace observability)
   enable_prometheus_metrics = var.enable_prometheus_metrics
   loki_otlp_endpoint        = try(module.loki[0].otlp_endpoint, "")
 

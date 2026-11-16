@@ -123,6 +123,7 @@ export TF_VAR_targeting_db_password="..."
 export TF_VAR_auth_master_key="..."
 export TF_VAR_evaluation_service_api_key="..."
 export TF_VAR_newrelic_license_key="..."
+export TF_VAR_discord_webhook_url="https://discord.com/api/webhooks/.../..."
 terraform plan
 ```
 
@@ -228,8 +229,10 @@ kubectl -n observability get deployment,pods,service
 kubectl -n observability logs deployment/opentelemetry-collector
 ```
 
-O Collector exporta traces e metricas OTLP ao New Relic. Os logs OTLP
-dos SDKs permanecem desativados para evitar duplicidade: os microsservicos
+O Collector exporta traces e metricas OTLP ao New Relic. Quando
+`enable_prometheus_metrics=true`, as metricas OTLP das aplicacoes e as metricas
+RED derivadas dos traces (`spanmetrics`) tambem sao exportadas ao Prometheus.
+Os logs OTLP dos SDKs permanecem desativados para evitar duplicidade: os microsservicos
 escrevem em `stdout`/`stderr`, e o Collector em DaemonSet coleta os arquivos dos
 containers. Prometheus e Grafana permanecem fora deste modulo.
 

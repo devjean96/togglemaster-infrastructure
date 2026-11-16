@@ -119,6 +119,7 @@ export TF_VAR_flags_db_password="${TF_VAR_flags_db_password:-destroy-only-placeh
 export TF_VAR_targeting_db_password="${TF_VAR_targeting_db_password:-destroy-only-placeholder-targeting}"
 export TF_VAR_auth_master_key="${TF_VAR_auth_master_key:-destroy-only-placeholder-auth-master-key}"
 export TF_VAR_evaluation_service_api_key="${TF_VAR_evaluation_service_api_key:-destroy-only-placeholder-evaluation-key}"
+export TF_VAR_discord_webhook_url="${TF_VAR_discord_webhook_url:-https://discord.com/api/webhooks/destroy-only/placeholder}"
 
 echo "Inicializando o backend remoto..."
 terraform -chdir="${ENVIRONMENT_DIR}" init -reconfigure \

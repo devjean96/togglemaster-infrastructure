@@ -29,14 +29,13 @@ variable "pagerduty_integration_key" {
 }
 
 variable "discord_webhook_url" {
-  description = "Webhook do canal do Discord (ChatOps). Vazio = integracao desativada."
+  description = "Webhook obrigatorio do canal do Discord (ChatOps)."
   type        = string
-  default     = ""
   sensitive   = true
 
   validation {
-    condition     = var.discord_webhook_url == "" || can(regex("^https://(discord|discordapp)\\.com/api/webhooks/", var.discord_webhook_url))
-    error_message = "discord_webhook_url deve ser uma URL de webhook do Discord."
+    condition     = can(regex("^https://(discord|discordapp)\\.com/api/webhooks/", trimspace(var.discord_webhook_url)))
+    error_message = "discord_webhook_url deve ser uma URL de webhook valida do Discord."
   }
 }
 

@@ -104,9 +104,11 @@ data:
         metrics:
           receivers: [otlp]
           processors: [memory_limiter, k8sattributes, resource/togglemaster, batch]
-          exporters: [otlphttp/newrelic]
+          # Mantem o New Relic como backend APM e envia as metricas nativas dos
+          # SDKs tambem ao Prometheus quando a integracao estiver habilitada.
+          exporters: [otlphttp/newrelic{{ if .Values.prometheus.enabled }}, otlphttp/prometheus{{ end }}]
         {{- if .Values.prometheus.enabled }}
-        # Metricas RED geradas a partir dos traces -> Prometheus
+        # Metricas RED geradas a partir dos traces -> Prometheus.
         metrics/spanmetrics:
           receivers: [spanmetrics]
           processors: [memory_limiter, batch]

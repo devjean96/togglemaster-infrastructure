@@ -103,7 +103,7 @@ variable "log_collector_resources" {
 }
 
 variable "enable_prometheus_metrics" {
-  description = "Gera metricas RED (spanmetrics) a partir dos traces e envia ao Prometheus."
+  description = "Envia ao Prometheus as metricas OTLP das aplicacoes e as metricas RED geradas por spanmetrics."
   type        = bool
   default     = false
 }
