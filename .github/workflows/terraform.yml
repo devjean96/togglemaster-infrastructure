@@ -93,6 +93,7 @@ jobs:
           role-to-assume: ${{ env.PERSONAL_DEMO_TERRAFORM_ROLE_ARN }}
           role-session-name: togglemaster-${{ github.run_id }}-plan
           role-duration-seconds: 7200
+          role-skip-session-tagging: true
           allowed-account-ids: ${{ env.PERSONAL_DEMO_AWS_ACCOUNT_ID }}
           aws-region: ${{ env.AWS_REGION }}
           mask-aws-account-id: true
@@ -242,6 +243,7 @@ jobs:
           role-to-assume: ${{ env.PERSONAL_DEMO_TERRAFORM_ROLE_ARN }}
           role-session-name: togglemaster-${{ github.run_id }}-apply
           role-duration-seconds: 7200
+          role-skip-session-tagging: true
           allowed-account-ids: ${{ env.PERSONAL_DEMO_AWS_ACCOUNT_ID }}
           aws-region: ${{ env.AWS_REGION }}
           mask-aws-account-id: true
