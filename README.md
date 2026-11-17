@@ -267,6 +267,11 @@ persistidos em `/var/lib/togglemaster/otelcol-logs` no node. A primeira
 instalacao importa o backlog existente e reinicios continuam do ultimo
 checkpoint, sem reler todo o arquivo.
 
+O modulo calcula `chartRevision` a partir de todos os arquivos do chart local e
+o grava no template dos Pods. Assim, qualquer alteracao de template gera uma
+mudanca nos values do `helm_release` e um rollout, mesmo quando os demais
+valores Terraform permanecem iguais.
+
 Depois do apply, valide:
 
 ```bash

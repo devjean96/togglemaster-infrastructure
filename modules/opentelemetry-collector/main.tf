@@ -1,3 +1,10 @@
+locals {
+  chart_revision = sha256(join(",", [
+    for filename in sort(tolist(fileset("${path.module}/chart", "**"))) :
+    "${filename}:${filesha256("${path.module}/chart/${filename}")}"
+  ]))
+}
+
 resource "helm_release" "this" {
   name             = "opentelemetry-collector"
   chart            = "${path.module}/chart"
@@ -10,6 +17,7 @@ resource "helm_release" "this" {
   wait            = true
 
   values = [yamlencode({
+    chartRevision = local.chart_revision
     image = {
       repository = var.image_repository
       tag        = var.image_tag

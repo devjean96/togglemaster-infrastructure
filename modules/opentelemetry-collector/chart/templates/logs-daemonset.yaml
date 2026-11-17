@@ -18,6 +18,7 @@ spec:
       labels:
         {{- include "togglemaster-otel.logsSelectorLabels" . | nindent 8 }}
       annotations:
+        togglemaster.io/chart-revision: {{ .Values.chartRevision | quote }}
         checksum/config: {{ include (print $.Template.BasePath "/logs-configmap.yaml") . | sha256sum }}
     spec:
       serviceAccountName: opentelemetry-collector
