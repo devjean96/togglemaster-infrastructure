@@ -128,9 +128,12 @@ temporaria, de preferencia um por vez para evitar commits concorrentes no
 repositorio GitOps. O registry ECR e descoberto via STS, sem account ID fixo.
 
 No repositorio de infraestrutura, crie o GitHub Environment `personal-demo` e
-cadastre nele credenciais da conta pessoal `335924543883` e os mesmos secrets
-`HOMOLOG_*` ja exigidos pelo Environment `homolog`. Para esse profile, o
-workflow deriva automaticamente o bucket
+cadastre nele `AWS_ACCESS_KEY_ID` e `AWS_SECRET_ACCESS_KEY` do usuario bootstrap
+`togglemaster-github-bootstrap` e os mesmos secrets `HOMOLOG_*` ja exigidos pelo
+Environment `homolog`. Nao cadastre `AWS_SESSION_TOKEN` para esse usuario: o
+workflow usa a chave somente para assumir `ToggleMasterTerraformDemoRole` por
+duas horas e provisiona com as credenciais temporarias da role. Para esse
+profile, o workflow deriva automaticamente o bucket
 `togglemaster-terraform-state-335924543883-us-east-2`; `TF_STATE_BUCKET`
 continua sendo usado apenas pelo profile Academy.
 
@@ -249,8 +252,10 @@ input `apply` estiver ativo. Os recursos da aplicacao tambem sao criados em
 
 Configure no repositorio:
 
-- no Environment `personal-demo`, credenciais da conta `335924543883`; o
-  workflow rejeita outra conta antes de acessar o backend;
+- no Environment `personal-demo`, `AWS_ACCESS_KEY_ID` e
+  `AWS_SECRET_ACCESS_KEY` do usuario `togglemaster-github-bootstrap`; o workflow
+  assume `ToggleMasterTerraformDemoRole` por duas horas e rejeita outra conta
+  antes de acessar o backend. `AWS_SESSION_TOKEN` nao e usado nesse profile;
 - `TF_STATE_BUCKET` e exigido apenas pelo profile Academy; no `personal-demo`,
   o nome e derivado do account ID validado;
 - variable opcional `LAB_ROLE_ARN`. Sem ela, o workflow consulta o account ID

@@ -51,6 +51,7 @@ env:
   AWS_REGION: ${{ ((github.event_name == 'workflow_dispatch' && inputs.profile == 'personal-demo') || (github.event_name != 'workflow_dispatch' && github.ref == 'refs/heads/feat/aws-temporary-demo')) && 'us-east-2' || 'us-east-1' }}
   AWS_DEFAULT_REGION: ${{ ((github.event_name == 'workflow_dispatch' && inputs.profile == 'personal-demo') || (github.event_name != 'workflow_dispatch' && github.ref == 'refs/heads/feat/aws-temporary-demo')) && 'us-east-2' || 'us-east-1' }}
   PERSONAL_DEMO_AWS_ACCOUNT_ID: "335924543883"
+  PERSONAL_DEMO_TERRAFORM_ROLE_ARN: arn:aws:iam::335924543883:role/ToggleMasterTerraformDemoRole
   PERSONAL_DEMO_STATE_REGION: us-east-2
   DEPLOYMENT_PROFILE: ${{ github.event_name == 'workflow_dispatch' && inputs.profile || github.ref == 'refs/heads/feat/aws-temporary-demo' && 'personal-demo' || 'academy' }}
   TF_VAR_eks_public_access_cidrs: ${{ vars.EKS_PUBLIC_ACCESS_CIDRS || '["0.0.0.0/0"]' }}
@@ -83,8 +84,21 @@ jobs:
         with:
           terraform_version: "1.10.5"
 
-      - name: Configure AWS credentials
-        if: github.event_name != 'push' || github.ref != 'refs/heads/feat/aws-temporary-demo'
+      - name: Configure personal-demo AWS credentials
+        if: (github.event_name != 'push' || github.ref != 'refs/heads/feat/aws-temporary-demo') && env.DEPLOYMENT_PROFILE == 'personal-demo'
+        uses: aws-actions/configure-aws-credentials@v6.2.3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ env.PERSONAL_DEMO_TERRAFORM_ROLE_ARN }}
+          role-session-name: togglemaster-${{ github.run_id }}-plan
+          role-duration-seconds: 7200
+          allowed-account-ids: ${{ env.PERSONAL_DEMO_AWS_ACCOUNT_ID }}
+          aws-region: ${{ env.AWS_REGION }}
+          mask-aws-account-id: true
+
+      - name: Configure AWS Academy credentials
+        if: (github.event_name != 'push' || github.ref != 'refs/heads/feat/aws-temporary-demo') && env.DEPLOYMENT_PROFILE == 'academy'
         uses: aws-actions/configure-aws-credentials@v6.2.3
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -219,7 +233,21 @@ jobs:
         with:
           terraform_version: "1.10.5"
 
-      - name: Configure AWS credentials
+      - name: Configure personal-demo AWS credentials
+        if: env.DEPLOYMENT_PROFILE == 'personal-demo'
+        uses: aws-actions/configure-aws-credentials@v6.2.3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ env.PERSONAL_DEMO_TERRAFORM_ROLE_ARN }}
+          role-session-name: togglemaster-${{ github.run_id }}-apply
+          role-duration-seconds: 7200
+          allowed-account-ids: ${{ env.PERSONAL_DEMO_AWS_ACCOUNT_ID }}
+          aws-region: ${{ env.AWS_REGION }}
+          mask-aws-account-id: true
+
+      - name: Configure AWS Academy credentials
+        if: env.DEPLOYMENT_PROFILE == 'academy'
         uses: aws-actions/configure-aws-credentials@v6.2.3
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
