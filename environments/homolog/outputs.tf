@@ -21,6 +21,9 @@ output "ecr_repository_urls" { value = module.ecr.repository_urls }
 output "auth_ecr_repository_url" {
   value = module.ecr.repository_urls["${local.name_prefix}/auth-service"]
 }
+output "service_deploy_role_arn" {
+  value = try(aws_iam_role.service_deploy[0].arn, null)
+}
 output "argocd_namespace" { value = try(module.argocd[0].namespace, null) }
 output "argocd_root_application" {
   value = try(module.argocd[0].root_application_name, null)

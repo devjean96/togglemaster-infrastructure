@@ -35,6 +35,11 @@ resource "terraform_data" "profile_guardrail" {
       condition     = var.deployment_profile != "academy" || var.lab_role_arn != null
       error_message = "O perfil academy exige lab_role_arn."
     }
+
+    precondition {
+      condition     = var.deployment_profile != "personal" || var.github_bootstrap_principal_arn != null
+      error_message = "O perfil personal exige github_bootstrap_principal_arn."
+    }
   }
 }
 
@@ -309,6 +314,67 @@ module "ecr" {
   ]
   force_delete = true
   tags         = local.common_tags
+}
+
+data "aws_iam_policy_document" "service_deploy_assume_role" {
+  count = var.deployment_profile == "personal" ? 1 : 0
+
+  statement {
+    sid     = "AllowGitHubBootstrapUser"
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "AWS"
+      identifiers = [var.github_bootstrap_principal_arn]
+    }
+  }
+}
+
+resource "aws_iam_role" "service_deploy" {
+  count = var.deployment_profile == "personal" ? 1 : 0
+
+  name                 = "ToggleMasterServiceDeployRole"
+  assume_role_policy   = data.aws_iam_policy_document.service_deploy_assume_role[0].json
+  max_session_duration = 3600
+  tags                 = local.common_tags
+}
+
+data "aws_iam_policy_document" "service_deploy" {
+  count = var.deployment_profile == "personal" ? 1 : 0
+
+  statement {
+    sid       = "AuthenticateToEcr"
+    effect    = "Allow"
+    actions   = ["ecr:GetAuthorizationToken"]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "PublishServiceImages"
+    effect = "Allow"
+    actions = [
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:BatchGetImage",
+      "ecr:CompleteLayerUpload",
+      "ecr:DescribeImages",
+      "ecr:DescribeRepositories",
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:InitiateLayerUpload",
+      "ecr:ListImages",
+      "ecr:PutImage",
+      "ecr:UploadLayerPart",
+    ]
+    resources = values(module.ecr.repository_arns)
+  }
+}
+
+resource "aws_iam_role_policy" "service_deploy" {
+  count = var.deployment_profile == "personal" ? 1 : 0
+
+  name   = "ToggleMasterServiceImagePublish"
+  role   = aws_iam_role.service_deploy[0].id
+  policy = data.aws_iam_policy_document.service_deploy[0].json
 }
 
 module "ingress_nginx" {

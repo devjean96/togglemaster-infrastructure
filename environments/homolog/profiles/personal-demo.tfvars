@@ -1,6 +1,7 @@
-deployment_profile = "personal"
-aws_region         = "us-east-2"
-availability_zones = ["us-east-2a", "us-east-2b"]
+deployment_profile             = "personal"
+aws_region                     = "us-east-2"
+availability_zones             = ["us-east-2a", "us-east-2b"]
+github_bootstrap_principal_arn = "arn:aws:iam::335924543883:user/togglemaster-github-bootstrap"
 
 # Mantem a mesma capacidade e todos os componentes do ambiente Academy.
 eks_node_group_name              = "togglemaster-homolog-eks-demo-nodes"

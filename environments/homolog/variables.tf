@@ -23,6 +23,19 @@ variable "lab_role_arn" {
     error_message = "Informe a ARN da LabRole no formato arn:aws:iam::ACCOUNT_ID:role/LabRole."
   }
 }
+
+variable "github_bootstrap_principal_arn" {
+  description = "ARN do usuario bootstrap autorizado a assumir a role de deploy dos servicos no perfil personal."
+  type        = string
+  default     = null
+  nullable    = true
+
+  validation {
+    condition     = var.github_bootstrap_principal_arn == null || can(regex("^arn:aws[a-z-]*:iam::[0-9]{12}:user/[A-Za-z0-9+=,.@_/-]+$", var.github_bootstrap_principal_arn))
+    error_message = "Informe uma ARN valida de usuario IAM para o bootstrap do GitHub Actions."
+  }
+}
+
 variable "vpc_cidr" {
   type    = string
   default = "10.10.0.0/16"
