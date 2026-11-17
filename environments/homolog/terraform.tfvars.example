@@ -1,4 +1,4 @@
-academy_mode = true
+deployment_profile = "academy"
 lab_role_arn = "arn:aws:iam::123456789012:role/LabRole"
 
 # Par de versoes compativel: ArgoCD 3.5.2 inclui schemas do Kubernetes 1.36.

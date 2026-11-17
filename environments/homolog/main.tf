@@ -1,6 +1,7 @@
 locals {
-  environment = "homolog"
-  name_prefix = "togglemaster-${local.environment}"
+  environment        = "homolog"
+  name_prefix        = "togglemaster-${local.environment}"
+  workload_namespace = local.name_prefix
   common_tags = merge(var.tags, {
     Project     = "ToggleMaster"
     Environment = local.environment
@@ -26,15 +27,28 @@ locals {
   }
 }
 
-resource "terraform_data" "academy_guardrail" {
-  input = var.academy_mode
+resource "terraform_data" "profile_guardrail" {
+  input = var.deployment_profile
 
   lifecycle {
     precondition {
-      condition     = var.academy_mode
-      error_message = "Este root foi projetado para AWS Academy; mantenha academy_mode=true."
+      condition     = var.deployment_profile != "academy" || var.lab_role_arn != null
+      error_message = "O perfil academy exige lab_role_arn."
     }
   }
+}
+
+module "eks_iam" {
+  count  = var.deployment_profile == "personal" ? 1 : 0
+  source = "../../modules/eks-iam"
+
+  name_prefix = local.name_prefix
+  tags        = local.common_tags
+}
+
+locals {
+  eks_cluster_role_arn = var.deployment_profile == "academy" ? var.lab_role_arn : module.eks_iam[0].cluster_role_arn
+  eks_node_role_arn    = var.deployment_profile == "academy" ? var.lab_role_arn : module.eks_iam[0].node_role_arn
 }
 
 module "networking" {
@@ -53,7 +67,8 @@ module "eks" {
   source = "../../modules/eks"
 
   cluster_name           = "${local.name_prefix}-eks"
-  lab_role_arn           = var.lab_role_arn
+  cluster_role_arn       = local.eks_cluster_role_arn
+  node_role_arn          = local.eks_node_role_arn
   subnet_ids             = module.networking.private_subnet_ids
   kubernetes_version     = var.kubernetes_version
   endpoint_public_access = var.eks_endpoint_public_access
@@ -65,7 +80,7 @@ module "eks" {
   max_size               = var.eks_max_size
   tags                   = local.common_tags
 
-  depends_on = [terraform_data.academy_guardrail]
+  depends_on = [terraform_data.profile_guardrail, module.eks_iam]
 }
 
 module "observability_namespace" {
@@ -204,6 +219,82 @@ module "sqs" {
   tags       = local.common_tags
 }
 
+data "aws_iam_policy_document" "evaluation_runtime" {
+  statement {
+    sid       = "PublishEvaluationEvents"
+    effect    = "Allow"
+    actions   = ["sqs:SendMessage"]
+    resources = [module.sqs.queue_arn]
+  }
+}
+
+data "aws_iam_policy_document" "analytics_runtime" {
+  statement {
+    sid    = "ConsumeEvaluationEvents"
+    effect = "Allow"
+    actions = [
+      "sqs:DeleteMessage",
+      "sqs:ReceiveMessage",
+    ]
+    resources = [module.sqs.queue_arn]
+  }
+
+  # Baseline gerada pelo IAM Policy Autopilot para boto3 PutItem.
+  statement {
+    sid    = "StoreAnalyticsEvents"
+    effect = "Allow"
+    actions = [
+      "dynamodb:PutItem",
+      "dynamodb:WriteDataForReplication",
+    ]
+    resources = [module.dynamodb.table_arn]
+  }
+}
+
+module "evaluation_pod_identity" {
+  count  = var.deployment_profile == "personal" ? 1 : 0
+  source = "../../modules/pod-identity-role"
+
+  role_name               = "${local.name_prefix}-evaluation-pod"
+  namespace               = local.workload_namespace
+  service_account         = "evaluation-service"
+  permissions_policy_json = data.aws_iam_policy_document.evaluation_runtime.json
+  tags                    = local.common_tags
+}
+
+module "analytics_pod_identity" {
+  count  = var.deployment_profile == "personal" ? 1 : 0
+  source = "../../modules/pod-identity-role"
+
+  role_name               = "${local.name_prefix}-analytics-pod"
+  namespace               = local.workload_namespace
+  service_account         = "analytics-service"
+  permissions_policy_json = data.aws_iam_policy_document.analytics_runtime.json
+  tags                    = local.common_tags
+}
+
+resource "aws_eks_pod_identity_association" "evaluation" {
+  count = var.deployment_profile == "personal" ? 1 : 0
+
+  cluster_name    = module.eks.cluster_name
+  namespace       = local.workload_namespace
+  service_account = "evaluation-service"
+  role_arn        = module.evaluation_pod_identity[0].role_arn
+
+  depends_on = [module.eks]
+}
+
+resource "aws_eks_pod_identity_association" "analytics" {
+  count = var.deployment_profile == "personal" ? 1 : 0
+
+  cluster_name    = module.eks.cluster_name
+  namespace       = local.workload_namespace
+  service_account = "analytics-service"
+  role_arn        = module.analytics_pod_identity[0].role_arn
+
+  depends_on = [module.eks]
+}
+
 module "ecr" {
   source = "../../modules/ecr"
 
@@ -236,6 +327,7 @@ module "argocd" {
   bootstrap_gitops       = var.argocd_bootstrap_gitops
   gitops_repository_url  = var.gitops_repository_url
   gitops_target_revision = var.gitops_target_revision
+  gitops_root_path       = var.gitops_root_path
 
   depends_on = [module.eks, module.ingress_nginx]
 }

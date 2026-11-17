@@ -5,7 +5,7 @@
 #trivy:ignore:AWS-0039:exp:2027-08-29 trivy:ignore:AWS-0040:exp:2027-08-29
 resource "aws_eks_cluster" "this" {
   name                      = var.cluster_name
-  role_arn                  = var.lab_role_arn
+  role_arn                  = var.cluster_role_arn
   version                   = var.kubernetes_version
   enabled_cluster_log_types = var.enabled_cluster_log_types
 
@@ -43,7 +43,7 @@ resource "aws_vpc_security_group_egress_rule" "https" {
 resource "aws_eks_node_group" "this" {
   cluster_name    = aws_eks_cluster.this.name
   node_group_name = "${var.cluster_name}-nodes"
-  node_role_arn   = var.lab_role_arn
+  node_role_arn   = var.node_role_arn
   subnet_ids      = var.subnet_ids
   instance_types  = var.node_instance_types
   capacity_type   = var.capacity_type

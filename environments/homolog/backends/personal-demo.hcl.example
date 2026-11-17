@@ -1,0 +1,4 @@
+bucket       = "togglemaster-terraform-state-ACCOUNT_ID"
+key          = "togglemaster/personal-demo/homolog/terraform.tfstate"
+region       = "us-east-1"
+use_lockfile = true

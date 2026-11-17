@@ -1,12 +1,12 @@
 # ToggleMaster Infrastructure
 
-Infraestrutura como codigo do ToggleMaster, provisionada com Terraform na AWS. Para respeitar os limites de recursos do AWS Academy, existe um unico ambiente implantavel, `homolog`, que concentra todos os componentes exigidos pelo desafio.
+Infraestrutura como codigo do ToggleMaster, provisionada com Terraform na AWS. Existe um unico ambiente implantavel, `homolog`, com dois perfis de identidade e states independentes: `academy` e `personal-demo`.
 
 ## Recursos provisionados
 
 - VPC, Internet Gateway, duas subnets publicas e duas privadas, tabelas de rotas e NAT Gateway opcional.
 - EKS com Managed Node Group nas subnets privadas e add-ons `vpc-cni`,
-  `kube-proxy`, `coredns` e `metrics-server`.
+  `kube-proxy`, `coredns`, `metrics-server` e `eks-pod-identity-agent`.
 - Tres instancias RDS PostgreSQL: `auth`, `flags` e `targeting`.
 - ElastiCache Redis.
 - DynamoDB `ToggleMasterAnalytics-<ambiente>` com capacidade sob demanda.
@@ -33,6 +33,8 @@ togglemaster-infrastructure/
 ├── modules/
 │   ├── networking/
 │   ├── eks/
+│   ├── eks-iam/
+│   ├── pod-identity-role/
 │   ├── rds/
 │   ├── elasticache/
 │   ├── dynamodb/
@@ -44,7 +46,9 @@ togglemaster-infrastructure/
 │   ├── ingress-nginx/
 │   └── argocd/
 ├── environments/
-│   └── homolog/                # unico ambiente implantavel
+│   └── homolog/
+│       ├── profiles/           # academy e personal-demo
+│       └── backends/           # exemplos com states separados
 └── .github/workflows/terraform.yml
 ```
 
@@ -52,13 +56,91 @@ togglemaster-infrastructure/
 
 Esta configuracao foi desenhada para as restricoes do AWS Academy:
 
-- nenhum recurso `aws_iam_role`, `aws_iam_policy` ou equivalente e criado;
+- no perfil `academy`, nenhum recurso `aws_iam_role` ou `aws_iam_policy` e criado;
 - a `LabRole` existente e recebida em `lab_role_arn`;
 - a mesma `LabRole` e usada em `role_arn` do cluster EKS e em `node_role_arn` do Managed Node Group;
 - o acesso administrativo inicial ao EKS fica com o principal que cria o cluster;
-- `academy_mode` deve permanecer `true` e possui uma guardrail no Terraform.
+- `deployment_profile="academy"` exige uma `lab_role_arn` valida.
 
 Antes do apply, confirme que a LabRole possui as permissoes e a trust policy necessarias para EKS e EC2. O AWS Academy pode limitar tipos de instancia, regioes e servicos; ajuste os parametros do ambiente caso a sua turma use limites diferentes.
+
+## Conta pessoal para demonstracao temporaria
+
+O profile `personal-demo` preserva a mesma topologia do Academy: tres nodes
+`t3.large`, NAT Gateway, Network Load Balancer, tres RDS, ElastiCache, EKS,
+observabilidade e os demais recursos. A diferenca e somente a identidade AWS e
+o state.
+
+O Terraform cria quatro identidades dedicadas:
+
+- role do control plane EKS, confiando em `eks.amazonaws.com`, com
+  `AmazonEKSClusterPolicy`;
+- role dos Managed Nodes, confiando em `ec2.amazonaws.com`, com
+  `AmazonEKSWorkerNodePolicy`, `AmazonEC2ContainerRegistryPullOnly` e
+  `AmazonEKS_CNI_Policy`;
+- role Pod Identity do `evaluation-service`, limitada a `sqs:SendMessage` na
+  fila do ambiente;
+- role Pod Identity do `analytics-service`, limitada ao consumo da fila e
+  escrita na tabela DynamoDB do ambiente.
+
+Os states nunca devem ser misturados:
+
+| Profile | Var file | Chave S3 |
+| --- | --- | --- |
+| Academy | `profiles/academy.tfvars` | `togglemaster/homolog/terraform.tfstate` |
+| Conta pessoal | `profiles/personal-demo.tfvars` | `togglemaster/personal-demo/homolog/terraform.tfstate` |
+
+Inicializacao e apply da conta pessoal:
+
+```bash
+cd environments/homolog
+cp backends/personal-demo.hcl.example backend.hcl
+# edite apenas o nome do bucket
+terraform init -reconfigure -backend-config=backend.hcl
+
+terraform plan -var-file=profiles/personal-demo.tfvars -out=tfplan
+terraform apply tfplan
+```
+
+Depois do apply, renderize ECR, SQS, DynamoDB e Redis no repositorio GitOps:
+
+```bash
+cd ../../../togglemaster-gitops
+./scripts/render-personal-demo.sh \
+  --terraform-dir ../togglemaster-infrastructure/environments/homolog
+```
+
+Revise, faça commit e push do resultado na branch
+`codex/aws-temporary-demo`. Os pipelines dos cinco servicos devem usar:
+
+- repository variable `GITOPS_TARGET_REVISION=codex/aws-temporary-demo`;
+- repository variable `GITOPS_OVERLAY=personal-demo`;
+- nos repositorios evaluation e analytics,
+  `AWS_AUTH_PROFILE=personal`, para desativar a atualizacao do Secret do
+  Academy;
+- secrets `AWS_ACCESS_KEY_ID` e `AWS_SECRET_ACCESS_KEY` da conta temporaria;
+  `AWS_SESSION_TOKEN` pode ficar vazio quando as credenciais nao forem de uma
+  sessao temporaria;
+- `GITOPS_TOKEN` com permissao de atualizar a branch GitOps temporaria.
+
+Execute manualmente (`workflow_dispatch`) cada pipeline a partir da branch
+temporaria, de preferencia um por vez para evitar commits concorrentes no
+repositorio GitOps. O registry ECR e descoberto via STS, sem account ID fixo.
+
+No repositorio de infraestrutura, crie o GitHub Environment `personal-demo` e
+cadastre nele `TF_STATE_BUCKET` e os mesmos secrets `HOMOLOG_*` ja exigidos pelo
+Environment `homolog`.
+
+Ao terminar a apresentacao, destrua usando exatamente o state personal-demo:
+
+```bash
+./scripts/destroy-personal-demo.sh \
+  --state-bucket "togglemaster-terraform-state-ACCOUNT_ID" \
+  --account-id "ACCOUNT_ID"
+```
+
+O script confirma a conta autenticada, usa a chave de state dedicada e preserva
+o bucket S3 para auditoria ou nova demonstracao.
 
 ## 1. Criar o backend
 
@@ -91,16 +173,16 @@ O locking usa o arquivo de lock nativo do backend S3 (`use_lockfile = true`), di
 
 ## 2. Inicializar o ambiente
 
-Copie o exemplo de backend e informe o bucket criado:
+Para o Academy, copie o exemplo de backend e informe o bucket criado:
 
 ```bash
 cd environments/homolog
-cp backend.hcl.example backend.hcl
+cp backends/academy.hcl.example backend.hcl
 # edite o nome do bucket
 terraform init -backend-config=backend.hcl
 ```
 
-A chave do state e fixa no root unico: `togglemaster/homolog/terraform.tfstate`.
+A chave do state Academy continua `togglemaster/homolog/terraform.tfstate`.
 
 ## 3. Informar variaveis e credenciais
 
@@ -124,7 +206,7 @@ export TF_VAR_auth_master_key="..."
 export TF_VAR_evaluation_service_api_key="..."
 export TF_VAR_newrelic_license_key="..."
 export TF_VAR_discord_webhook_url="https://discord.com/api/webhooks/.../..."
-terraform plan
+terraform plan -var-file=profiles/academy.tfvars
 ```
 
 Use senhas com pelo menos 16 caracteres. Para reduzir exposicao do endpoint do EKS, configure `eks_public_access_cidrs` com o IP publico da equipe em vez de `0.0.0.0/0`.
@@ -154,7 +236,10 @@ Em Pull Requests, o workflow executa para o ambiente unico:
 4. scan de configuracao com Trivy para achados HIGH/CRITICAL;
 5. `terraform plan`.
 
-Nao existe etapa de apply em Pull Requests. Na branch `main`, as validacoes e o plan sao repetidos, e o apply roda no GitHub Environment `homolog`.
+Nao existe etapa de apply em Pull Requests. Na branch `main`, o profile Academy
+continua usando o GitHub Environment `homolog`. Em `workflow_dispatch`, escolha
+`personal-demo`; o workflow usa o GitHub Environment `personal-demo`, a chave
+de state dedicada e somente executa apply quando o input `apply` estiver ativo.
 
 Configure no repositorio:
 

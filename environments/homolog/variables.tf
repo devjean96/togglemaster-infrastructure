@@ -2,15 +2,24 @@ variable "aws_region" {
   type    = string
   default = "us-east-1"
 }
-variable "academy_mode" {
-  type    = bool
-  default = true
+variable "deployment_profile" {
+  description = "Perfil de identidade AWS: academy reutiliza a LabRole; personal cria roles dedicadas."
+  type        = string
+  default     = "academy"
+
+  validation {
+    condition     = contains(["academy", "personal"], var.deployment_profile)
+    error_message = "deployment_profile deve ser academy ou personal."
+  }
 }
 variable "lab_role_arn" {
-  description = "ARN da LabRole fornecida pelo AWS Academy."
+  description = "ARN da LabRole fornecida pelo AWS Academy. Obrigatoria somente no perfil academy."
   type        = string
+  default     = null
+  nullable    = true
+
   validation {
-    condition     = can(regex("^arn:aws[a-z-]*:iam::[0-9]{12}:role/LabRole$", var.lab_role_arn))
+    condition     = var.lab_role_arn == null || can(regex("^arn:aws[a-z-]*:iam::[0-9]{12}:role/LabRole$", var.lab_role_arn))
     error_message = "Informe a ARN da LabRole no formato arn:aws:iam::ACCOUNT_ID:role/LabRole."
   }
 }
@@ -254,6 +263,11 @@ variable "gitops_repository_url" {
 variable "gitops_target_revision" {
   type    = string
   default = "main"
+}
+variable "gitops_root_path" {
+  description = "Caminho da root Application no repositorio GitOps."
+  type        = string
+  default     = "argocd"
 }
 variable "tags" {
   type    = map(string)

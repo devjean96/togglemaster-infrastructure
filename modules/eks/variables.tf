@@ -1,11 +1,20 @@
 variable "cluster_name" { type = string }
-variable "lab_role_arn" {
-  description = "ARN da LabRole existente no AWS Academy. Nenhuma role IAM e criada por este modulo."
+variable "cluster_role_arn" {
+  description = "ARN da role assumida pelo control plane do Amazon EKS."
   type        = string
 
   validation {
-    condition     = can(regex("^arn:aws[a-z-]*:iam::[0-9]{12}:role/.+", var.lab_role_arn))
-    error_message = "lab_role_arn deve ser uma ARN valida de role IAM."
+    condition     = can(regex("^arn:aws[a-z-]*:iam::[0-9]{12}:role/.+", var.cluster_role_arn))
+    error_message = "cluster_role_arn deve ser uma ARN valida de role IAM."
+  }
+}
+variable "node_role_arn" {
+  description = "ARN da role assumida pelas instancias do Managed Node Group."
+  type        = string
+
+  validation {
+    condition     = can(regex("^arn:aws[a-z-]*:iam::[0-9]{12}:role/.+", var.node_role_arn))
+    error_message = "node_role_arn deve ser uma ARN valida de role IAM."
   }
 }
 variable "subnet_ids" { type = list(string) }
@@ -53,7 +62,7 @@ variable "min_size" { type = number }
 variable "max_size" { type = number }
 variable "cluster_addons" {
   type    = list(string)
-  default = ["coredns", "kube-proxy", "vpc-cni", "metrics-server"]
+  default = ["coredns", "kube-proxy", "vpc-cni", "metrics-server", "eks-pod-identity-agent"]
 }
 variable "enabled_cluster_log_types" {
   type    = list(string)

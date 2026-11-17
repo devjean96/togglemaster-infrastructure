@@ -1,5 +1,14 @@
 output "eks_cluster_name" { value = module.eks.cluster_name }
 output "eks_cluster_endpoint" { value = module.eks.cluster_endpoint }
+output "deployment_profile" { value = var.deployment_profile }
+output "eks_cluster_role_arn" { value = local.eks_cluster_role_arn }
+output "eks_node_role_arn" { value = local.eks_node_role_arn }
+output "evaluation_pod_identity_role_arn" {
+  value = try(module.evaluation_pod_identity[0].role_arn, null)
+}
+output "analytics_pod_identity_role_arn" {
+  value = try(module.analytics_pod_identity[0].role_arn, null)
+}
 output "rds_endpoints" {
   value     = module.rds.endpoints
   sensitive = true
