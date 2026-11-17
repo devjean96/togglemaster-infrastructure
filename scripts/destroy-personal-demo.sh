@@ -8,6 +8,7 @@ PROFILE_FILE="profiles/personal-demo.tfvars"
 STATE_KEY="togglemaster/personal-demo/homolog/terraform.tfstate"
 
 AWS_REGION_VALUE="${AWS_REGION:-us-east-1}"
+STATE_REGION="${TF_STATE_REGION:-us-east-2}"
 STATE_BUCKET="${TF_STATE_BUCKET:-}"
 EXPECTED_ACCOUNT_ID="${EXPECTED_AWS_ACCOUNT_ID:-}"
 AUTO_APPROVE=false
@@ -19,7 +20,8 @@ Uso:
 
 Opcoes:
   --state-bucket NOME  Bucket S3 que armazena o state personal-demo.
-  --region REGIAO      Regiao AWS (padrao: AWS_REGION ou us-east-1).
+  --region REGIAO      Regiao dos recursos AWS (padrao: AWS_REGION ou us-east-1).
+  --state-region REGIAO Regiao do bucket de state (padrao: TF_STATE_REGION ou us-east-2).
   --account-id ID      Conta AWS esperada (12 digitos).
   --auto-approve       Nao solicita confirmacao. Exige --account-id.
   -h, --help           Exibe esta ajuda.
@@ -46,6 +48,11 @@ while (($# > 0)); do
       AWS_REGION_VALUE="$2"
       shift 2
       ;;
+    --state-region)
+      (($# >= 2)) || fail "informe um valor para --state-region"
+      STATE_REGION="$2"
+      shift 2
+      ;;
     --account-id)
       (($# >= 2)) || fail "informe um valor para --account-id"
       EXPECTED_ACCOUNT_ID="$2"
@@ -67,6 +74,7 @@ done
 
 [[ -n "$STATE_BUCKET" ]] || fail "use --state-bucket ou defina TF_STATE_BUCKET"
 [[ "$AWS_REGION_VALUE" =~ ^[a-z]{2}(-gov)?-[a-z]+-[0-9]+$ ]] || fail "regiao AWS invalida: $AWS_REGION_VALUE"
+[[ "$STATE_REGION" =~ ^[a-z]{2}(-gov)?-[a-z]+-[0-9]+$ ]] || fail "regiao do state invalida: $STATE_REGION"
 [[ -z "$EXPECTED_ACCOUNT_ID" || "$EXPECTED_ACCOUNT_ID" =~ ^[0-9]{12}$ ]] || fail "account ID deve possuir 12 digitos"
 command -v aws >/dev/null 2>&1 || fail "comando obrigatorio nao encontrado: aws"
 command -v terraform >/dev/null 2>&1 || fail "comando obrigatorio nao encontrado: terraform"
@@ -83,7 +91,8 @@ aws s3api head-bucket --bucket "$STATE_BUCKET" >/dev/null
 echo
 echo "ATENCAO: esta operacao destruira o ambiente personal-demo."
 echo "Conta AWS : $CURRENT_ACCOUNT_ID"
-echo "Regiao    : $AWS_REGION_VALUE"
+echo "Regiao dos recursos : $AWS_REGION_VALUE"
+echo "Regiao do state     : $STATE_REGION"
 echo "State S3  : s3://${STATE_BUCKET}/${STATE_KEY}"
 echo
 
@@ -113,7 +122,7 @@ export TF_VAR_discord_webhook_url="${TF_VAR_discord_webhook_url:-https://discord
 terraform -chdir="$ENVIRONMENT_DIR" init -reconfigure \
   -backend-config="bucket=${STATE_BUCKET}" \
   -backend-config="key=${STATE_KEY}" \
-  -backend-config="region=${AWS_REGION_VALUE}" \
+  -backend-config="region=${STATE_REGION}" \
   -backend-config="use_lockfile=true"
 
 if [[ -z "$(terraform -chdir="$ENVIRONMENT_DIR" state list)" ]]; then

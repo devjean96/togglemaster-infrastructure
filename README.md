@@ -95,7 +95,7 @@ Inicializacao e apply da conta pessoal:
 ```bash
 cd environments/homolog
 cp backends/personal-demo.hcl.example backend.hcl
-# edite apenas o nome do bucket
+# edite o ACCOUNT_ID no nome do bucket; o state fica em us-east-2
 terraform init -reconfigure -backend-config=backend.hcl
 
 terraform plan -var-file=profiles/personal-demo.tfvars -out=tfplan
@@ -128,15 +128,19 @@ temporaria, de preferencia um por vez para evitar commits concorrentes no
 repositorio GitOps. O registry ECR e descoberto via STS, sem account ID fixo.
 
 No repositorio de infraestrutura, crie o GitHub Environment `personal-demo` e
-cadastre nele `TF_STATE_BUCKET` e os mesmos secrets `HOMOLOG_*` ja exigidos pelo
-Environment `homolog`.
+cadastre nele credenciais da conta pessoal `335924543883` e os mesmos secrets
+`HOMOLOG_*` ja exigidos pelo Environment `homolog`. Para esse profile, o
+workflow deriva automaticamente o bucket
+`togglemaster-terraform-state-335924543883-us-east-2`; `TF_STATE_BUCKET`
+continua sendo usado apenas pelo profile Academy.
 
 Ao terminar a apresentacao, destrua usando exatamente o state personal-demo:
 
 ```bash
 ./scripts/destroy-personal-demo.sh \
-  --state-bucket "togglemaster-terraform-state-ACCOUNT_ID" \
-  --account-id "ACCOUNT_ID"
+  --state-bucket "togglemaster-terraform-state-335924543883-us-east-2" \
+  --state-region "us-east-2" \
+  --account-id "335924543883"
 ```
 
 O script confirma a conta autenticada, usa a chave de state dedicada e preserva
@@ -239,11 +243,15 @@ Em Pull Requests, o workflow executa para o ambiente unico:
 Nao existe etapa de apply em Pull Requests. Na branch `main`, o profile Academy
 continua usando o GitHub Environment `homolog`. Em `workflow_dispatch`, escolha
 `personal-demo`; o workflow usa o GitHub Environment `personal-demo`, a chave
-de state dedicada e somente executa apply quando o input `apply` estiver ativo.
+de state dedicada no bucket em `us-east-2` e somente executa apply quando o
+input `apply` estiver ativo. Os recursos da aplicacao continuam em `us-east-1`.
 
 Configure no repositorio:
 
-- secrets `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` e `TF_STATE_BUCKET`;
+- no Environment `personal-demo`, credenciais da conta `335924543883`; o
+  workflow rejeita outra conta antes de acessar o backend;
+- `TF_STATE_BUCKET` e exigido apenas pelo profile Academy; no `personal-demo`,
+  o nome e derivado do account ID validado;
 - variable opcional `LAB_ROLE_ARN`. Sem ela, o workflow consulta o account ID
   autenticado via STS e monta automaticamente
   `arn:aws:iam::<ACCOUNT_ID>:role/LabRole`;

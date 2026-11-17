@@ -50,6 +50,8 @@ env:
   TF_INPUT: false
   AWS_REGION: us-east-1
   AWS_DEFAULT_REGION: us-east-1
+  PERSONAL_DEMO_AWS_ACCOUNT_ID: "335924543883"
+  PERSONAL_DEMO_STATE_REGION: us-east-2
   DEPLOYMENT_PROFILE: ${{ github.event_name == 'workflow_dispatch' && inputs.profile || github.ref == 'refs/heads/feat/aws-temporary-demo' && 'personal-demo' || 'academy' }}
   TF_VAR_eks_public_access_cidrs: ${{ vars.EKS_PUBLIC_ACCESS_CIDRS || '["0.0.0.0/0"]' }}
   TF_VAR_eks_https_egress_cidrs: ${{ vars.EKS_HTTPS_EGRESS_CIDRS || '["0.0.0.0/0"]' }}
@@ -129,13 +131,43 @@ jobs:
               ;;
           esac
 
+      - name: Resolve Terraform backend
+        if: github.event_name != 'push' || github.ref != 'refs/heads/feat/aws-temporary-demo'
+        env:
+          CONFIGURED_STATE_BUCKET: ${{ secrets.TF_STATE_BUCKET }}
+        shell: bash
+        run: |
+          case "$DEPLOYMENT_PROFILE" in
+            academy)
+              state_bucket="$CONFIGURED_STATE_BUCKET"
+              state_region="$AWS_REGION"
+              ;;
+            personal-demo)
+              account_id="$(aws sts get-caller-identity --query Account --output text)"
+              if [[ "$account_id" != "$PERSONAL_DEMO_AWS_ACCOUNT_ID" ]]; then
+                echo "::error::personal-demo requires AWS account $PERSONAL_DEMO_AWS_ACCOUNT_ID, but the workflow authenticated as $account_id."
+                exit 1
+              fi
+              state_bucket="togglemaster-terraform-state-${account_id}-${PERSONAL_DEMO_STATE_REGION}"
+              state_region="$PERSONAL_DEMO_STATE_REGION"
+              ;;
+          esac
+
+          if [[ ! "$state_bucket" =~ ^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$ ]]; then
+            echo "::error::Terraform state bucket is missing or invalid."
+            exit 1
+          fi
+
+          echo "TF_STATE_BUCKET=$state_bucket" >> "$GITHUB_ENV"
+          echo "TF_STATE_REGION=$state_region" >> "$GITHUB_ENV"
+
       - name: Terraform format
         run: terraform fmt -check -recursive
 
       - name: Terraform init with remote backend
         if: github.event_name != 'push' || github.ref != 'refs/heads/feat/aws-temporary-demo'
         working-directory: environments/homolog
-        run: terraform init -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" -backend-config="key=${TF_STATE_KEY}" -backend-config="region=${AWS_REGION}"
+        run: terraform init -backend-config="bucket=${TF_STATE_BUCKET}" -backend-config="key=${TF_STATE_KEY}" -backend-config="region=${TF_STATE_REGION}"
 
       - name: Terraform init for branch validation
         if: github.event_name == 'push' && github.ref == 'refs/heads/feat/aws-temporary-demo'
@@ -233,12 +265,41 @@ jobs:
               ;;
           esac
 
+      - name: Resolve Terraform backend
+        env:
+          CONFIGURED_STATE_BUCKET: ${{ secrets.TF_STATE_BUCKET }}
+        shell: bash
+        run: |
+          case "$DEPLOYMENT_PROFILE" in
+            academy)
+              state_bucket="$CONFIGURED_STATE_BUCKET"
+              state_region="$AWS_REGION"
+              ;;
+            personal-demo)
+              account_id="$(aws sts get-caller-identity --query Account --output text)"
+              if [[ "$account_id" != "$PERSONAL_DEMO_AWS_ACCOUNT_ID" ]]; then
+                echo "::error::personal-demo requires AWS account $PERSONAL_DEMO_AWS_ACCOUNT_ID, but the workflow authenticated as $account_id."
+                exit 1
+              fi
+              state_bucket="togglemaster-terraform-state-${account_id}-${PERSONAL_DEMO_STATE_REGION}"
+              state_region="$PERSONAL_DEMO_STATE_REGION"
+              ;;
+          esac
+
+          if [[ ! "$state_bucket" =~ ^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$ ]]; then
+            echo "::error::Terraform state bucket is missing or invalid."
+            exit 1
+          fi
+
+          echo "TF_STATE_BUCKET=$state_bucket" >> "$GITHUB_ENV"
+          echo "TF_STATE_REGION=$state_region" >> "$GITHUB_ENV"
+
       - name: Terraform format
         run: terraform fmt -check -recursive
 
       - name: Terraform init
         working-directory: environments/homolog
-        run: terraform init -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" -backend-config="key=${TF_STATE_KEY}" -backend-config="region=${AWS_REGION}"
+        run: terraform init -backend-config="bucket=${TF_STATE_BUCKET}" -backend-config="key=${TF_STATE_KEY}" -backend-config="region=${TF_STATE_REGION}"
 
       - name: Terraform validate
         working-directory: environments/homolog
