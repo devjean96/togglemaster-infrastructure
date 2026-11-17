@@ -7,7 +7,7 @@ ENVIRONMENT_DIR="${PROJECT_DIR}/environments/homolog"
 PROFILE_FILE="profiles/personal-demo.tfvars"
 STATE_KEY="togglemaster/personal-demo/homolog/terraform.tfstate"
 
-AWS_REGION_VALUE="${AWS_REGION:-us-east-1}"
+AWS_REGION_VALUE="${AWS_REGION:-us-east-2}"
 STATE_REGION="${TF_STATE_REGION:-us-east-2}"
 STATE_BUCKET="${TF_STATE_BUCKET:-}"
 EXPECTED_ACCOUNT_ID="${EXPECTED_AWS_ACCOUNT_ID:-}"
@@ -20,7 +20,7 @@ Uso:
 
 Opcoes:
   --state-bucket NOME  Bucket S3 que armazena o state personal-demo.
-  --region REGIAO      Regiao dos recursos AWS (padrao: AWS_REGION ou us-east-1).
+  --region REGIAO      Regiao dos recursos AWS (padrao: AWS_REGION ou us-east-2).
   --state-region REGIAO Regiao do bucket de state (padrao: TF_STATE_REGION ou us-east-2).
   --account-id ID      Conta AWS esperada (12 digitos).
   --auto-approve       Nao solicita confirmacao. Exige --account-id.

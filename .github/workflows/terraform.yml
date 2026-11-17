@@ -48,8 +48,8 @@ concurrency:
 env:
   TF_IN_AUTOMATION: true
   TF_INPUT: false
-  AWS_REGION: us-east-1
-  AWS_DEFAULT_REGION: us-east-1
+  AWS_REGION: ${{ ((github.event_name == 'workflow_dispatch' && inputs.profile == 'personal-demo') || (github.event_name != 'workflow_dispatch' && github.ref == 'refs/heads/feat/aws-temporary-demo')) && 'us-east-2' || 'us-east-1' }}
+  AWS_DEFAULT_REGION: ${{ ((github.event_name == 'workflow_dispatch' && inputs.profile == 'personal-demo') || (github.event_name != 'workflow_dispatch' && github.ref == 'refs/heads/feat/aws-temporary-demo')) && 'us-east-2' || 'us-east-1' }}
   PERSONAL_DEMO_AWS_ACCOUNT_ID: "335924543883"
   PERSONAL_DEMO_STATE_REGION: us-east-2
   DEPLOYMENT_PROFILE: ${{ github.event_name == 'workflow_dispatch' && inputs.profile || github.ref == 'refs/heads/feat/aws-temporary-demo' && 'personal-demo' || 'academy' }}

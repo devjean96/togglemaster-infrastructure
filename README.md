@@ -68,8 +68,8 @@ Antes do apply, confirme que a LabRole possui as permissoes e a trust policy nec
 
 O profile `personal-demo` preserva a mesma topologia do Academy: tres nodes
 `t3.large`, NAT Gateway, Network Load Balancer, tres RDS, ElastiCache, EKS,
-observabilidade e os demais recursos. A diferenca e somente a identidade AWS e
-o state.
+observabilidade e os demais recursos. Esse profile e implantado em `us-east-2`
+com subnets em `us-east-2a` e `us-east-2b`; Academy permanece em `us-east-1`.
 
 O Terraform cria quatro identidades dedicadas:
 
@@ -85,10 +85,10 @@ O Terraform cria quatro identidades dedicadas:
 
 Os states nunca devem ser misturados:
 
-| Profile | Var file | Chave S3 |
-| --- | --- | --- |
-| Academy | `profiles/academy.tfvars` | `togglemaster/homolog/terraform.tfstate` |
-| Conta pessoal | `profiles/personal-demo.tfvars` | `togglemaster/personal-demo/homolog/terraform.tfstate` |
+| Profile | Regiao dos recursos | Var file | Chave S3 |
+| --- | --- | --- | --- |
+| Academy | `us-east-1` | `profiles/academy.tfvars` | `togglemaster/homolog/terraform.tfstate` |
+| Conta pessoal | `us-east-2` | `profiles/personal-demo.tfvars` | `togglemaster/personal-demo/homolog/terraform.tfstate` |
 
 Inicializacao e apply da conta pessoal:
 
@@ -244,7 +244,8 @@ Nao existe etapa de apply em Pull Requests. Na branch `main`, o profile Academy
 continua usando o GitHub Environment `homolog`. Em `workflow_dispatch`, escolha
 `personal-demo`; o workflow usa o GitHub Environment `personal-demo`, a chave
 de state dedicada no bucket em `us-east-2` e somente executa apply quando o
-input `apply` estiver ativo. Os recursos da aplicacao continuam em `us-east-1`.
+input `apply` estiver ativo. Os recursos da aplicacao tambem sao criados em
+`us-east-2`; o profile Academy continua em `us-east-1`.
 
 Configure no repositorio:
 
