@@ -75,6 +75,7 @@ module "eks" {
   public_access_cidrs    = var.eks_public_access_cidrs
   https_egress_cidrs     = var.eks_https_egress_cidrs
   node_instance_types    = var.eks_node_instance_types
+  node_group_name        = var.eks_node_group_name
   desired_size           = var.eks_desired_size
   min_size               = var.eks_min_size
   max_size               = var.eks_max_size

@@ -74,6 +74,11 @@ variable "eks_node_instance_types" {
   type    = list(string)
   default = ["t3.large"]
 }
+variable "eks_node_group_name" {
+  description = "Nome opcional do managed node group, usado para isolar perfis temporarios."
+  type        = string
+  default     = null
+}
 variable "eks_desired_size" {
   type    = number
   default = 3

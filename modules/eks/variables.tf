@@ -49,6 +49,16 @@ variable "node_instance_types" {
   type    = list(string)
   default = ["t3.large"]
 }
+variable "node_group_name" {
+  description = "Nome opcional do managed node group. Quando nulo, usa <cluster_name>-nodes."
+  type        = string
+  default     = null
+
+  validation {
+    condition     = var.node_group_name == null || can(regex("^[0-9A-Za-z][A-Za-z0-9_-]{0,62}$", var.node_group_name))
+    error_message = "node_group_name deve ser nulo ou um nome EKS valido com ate 63 caracteres."
+  }
+}
 variable "capacity_type" {
   type    = string
   default = "ON_DEMAND"

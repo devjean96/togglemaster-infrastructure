@@ -43,7 +43,7 @@ resource "aws_vpc_security_group_egress_rule" "https" {
 
 resource "aws_eks_node_group" "this" {
   cluster_name    = aws_eks_cluster.this.name
-  node_group_name = "${var.cluster_name}-nodes"
+  node_group_name = coalesce(var.node_group_name, "${var.cluster_name}-nodes")
   node_role_arn   = var.node_role_arn
   subnet_ids      = var.subnet_ids
   instance_types  = var.node_instance_types
