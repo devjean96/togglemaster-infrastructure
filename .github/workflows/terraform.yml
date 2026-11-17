@@ -11,7 +11,9 @@ on:
       - "modules/opentelemetry-collector/chart/**"
       - ".github/workflows/terraform.yml"
   push:
-    branches: [main]
+    branches:
+      - main
+      - feat/aws-temporary-demo
     paths:
       - "**/*.tf"
       - "**/*.tfvars"
@@ -48,7 +50,7 @@ env:
   TF_INPUT: false
   AWS_REGION: us-east-1
   AWS_DEFAULT_REGION: us-east-1
-  DEPLOYMENT_PROFILE: ${{ github.event_name == 'workflow_dispatch' && inputs.profile || 'academy' }}
+  DEPLOYMENT_PROFILE: ${{ github.event_name == 'workflow_dispatch' && inputs.profile || github.ref == 'refs/heads/feat/aws-temporary-demo' && 'personal-demo' || 'academy' }}
   TF_VAR_eks_public_access_cidrs: ${{ vars.EKS_PUBLIC_ACCESS_CIDRS || '["0.0.0.0/0"]' }}
   TF_VAR_eks_https_egress_cidrs: ${{ vars.EKS_HTTPS_EGRESS_CIDRS || '["0.0.0.0/0"]' }}
   TF_VAR_ingress_load_balancer_source_ranges: ${{ vars.INGRESS_LOAD_BALANCER_SOURCE_RANGES || '["0.0.0.0/0"]' }}

@@ -111,9 +111,9 @@ cd ../../../togglemaster-gitops
 ```
 
 Revise, faça commit e push do resultado na branch
-`codex/aws-temporary-demo`. Os pipelines dos cinco servicos devem usar:
+`feat/aws-temporary-demo`. Os pipelines dos cinco servicos devem usar:
 
-- repository variable `GITOPS_TARGET_REVISION=codex/aws-temporary-demo`;
+- repository variable `GITOPS_TARGET_REVISION=feat/aws-temporary-demo`;
 - repository variable `GITOPS_OVERLAY=personal-demo`;
 - nos repositorios evaluation e analytics,
   `AWS_AUTH_PROFILE=personal`, para desativar a atualizacao do Secret do

@@ -10,5 +10,5 @@ install_ingress_nginx   = true
 install_loki            = true
 
 # A demonstracao usa as branches temporarias e o overlay dedicado.
-gitops_target_revision = "codex/aws-temporary-demo"
+gitops_target_revision = "feat/aws-temporary-demo"
 gitops_root_path       = "argocd-overlays/personal-demo"
