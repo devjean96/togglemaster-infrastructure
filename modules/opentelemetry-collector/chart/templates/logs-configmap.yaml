@@ -15,14 +15,19 @@ data:
         create_directory: true
 
     receivers:
-      filelog:
+      file_log:
         include:
           - /var/log/pods/*/*/*.log
         exclude:
           - /var/log/pods/{{ .Release.Namespace }}_opentelemetry-collector-logs-*_*/*/*.log
-        start_at: end
+        start_at: beginning
         include_file_path: true
         storage: file_storage
+        retry_on_failure:
+          enabled: true
+          initial_interval: 1s
+          max_interval: 30s
+          max_elapsed_time: 0
         operators:
           - id: container-parser
             type: container
@@ -32,7 +37,7 @@ data:
         check_interval: 1s
         limit_mib: 192
         spike_limit_mib: 48
-      k8sattributes:
+      k8s_attributes:
         auth_type: serviceAccount
         passthrough: false
         filter:
@@ -75,7 +80,7 @@ data:
         timeout: 5s
 
     exporters:
-      otlphttp/loki:
+      otlp_http/loki:
         endpoint: {{ required "logs.lokiEndpoint is required" .Values.logs.lokiEndpoint | quote }}
         compression: gzip
         timeout: 30s
@@ -83,11 +88,12 @@ data:
           enabled: true
           initial_interval: 5s
           max_interval: 30s
-          max_elapsed_time: 300s
+          max_elapsed_time: 0
         sending_queue:
           enabled: true
           num_consumers: 2
           queue_size: 1000
+          storage: file_storage
 
     service:
       extensions: [health_check, file_storage]
@@ -96,7 +102,7 @@ data:
           level: info
       pipelines:
         logs:
-          receivers: [filelog]
-          processors: [memory_limiter, k8sattributes, transform/logs, batch]
-          exporters: [otlphttp/loki]
+          receivers: [file_log]
+          processors: [memory_limiter, k8s_attributes, transform/logs, batch]
+          exporters: [otlp_http/loki]
 {{- end }}

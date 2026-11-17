@@ -260,6 +260,13 @@ OTLP/HTTP nativo do Loki:
 http://loki-gateway.observability.svc.cluster.local/otlp
 ```
 
+Os arquivos CRI pertencem ao root do node; por isso, somente o agente de logs
+usa UID/GID `0`, ainda com `allowPrivilegeEscalation=false`, filesystem da
+imagem somente leitura e todas as capabilities removidas. Offsets e filas ficam
+persistidos em `/var/lib/togglemaster/otelcol-logs` no node. A primeira
+instalacao importa o backlog existente e reinicios continuam do ultimo
+checkpoint, sem reler todo o arquivo.
+
 Depois do apply, valide:
 
 ```bash
