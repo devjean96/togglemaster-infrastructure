@@ -59,7 +59,7 @@ jobs:
   pull-request-and-main-plan:
     name: Validate and plan (homolog)
     runs-on: ubuntu-latest
-    environment: ${{ github.event_name == 'workflow_dispatch' && inputs.profile == 'personal-demo' && 'personal-demo' || 'homolog' }}
+    environment: ${{ ((github.event_name == 'workflow_dispatch' && inputs.profile == 'personal-demo') || github.ref == 'refs/heads/feat/aws-temporary-demo') && 'personal-demo' || 'homolog' }}
     env:
       TF_VAR_auth_db_password: ${{ secrets.HOMOLOG_AUTH_DB_PASSWORD }}
       TF_VAR_flags_db_password: ${{ secrets.HOMOLOG_FLAGS_DB_PASSWORD }}
@@ -156,7 +156,7 @@ jobs:
     if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && inputs.apply)
     needs: pull-request-and-main-plan
     runs-on: ubuntu-latest
-    environment: ${{ github.event_name == 'workflow_dispatch' && inputs.profile == 'personal-demo' && 'personal-demo' || 'homolog' }}
+    environment: ${{ ((github.event_name == 'workflow_dispatch' && inputs.profile == 'personal-demo') || github.ref == 'refs/heads/feat/aws-temporary-demo') && 'personal-demo' || 'homolog' }}
     env:
       TF_VAR_auth_db_password: ${{ secrets.HOMOLOG_AUTH_DB_PASSWORD }}
       TF_VAR_flags_db_password: ${{ secrets.HOMOLOG_FLAGS_DB_PASSWORD }}
