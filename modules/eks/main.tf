@@ -4,10 +4,11 @@
 # enabled and public access is restricted by var.public_access_cidrs.
 #trivy:ignore:AWS-0039:exp:2027-08-29 trivy:ignore:AWS-0040:exp:2027-08-29
 resource "aws_eks_cluster" "this" {
-  name                      = var.cluster_name
-  role_arn                  = var.cluster_role_arn
-  version                   = var.kubernetes_version
-  enabled_cluster_log_types = var.enabled_cluster_log_types
+  name                          = var.cluster_name
+  role_arn                      = var.cluster_role_arn
+  version                       = var.kubernetes_version
+  enabled_cluster_log_types     = var.enabled_cluster_log_types
+  bootstrap_self_managed_addons = false
 
   access_config {
     authentication_mode                         = "API_AND_CONFIG_MAP"
