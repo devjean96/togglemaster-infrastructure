@@ -66,20 +66,21 @@ module "networking" {
 module "eks" {
   source = "../../modules/eks"
 
-  cluster_name           = "${local.name_prefix}-eks"
-  cluster_role_arn       = local.eks_cluster_role_arn
-  node_role_arn          = local.eks_node_role_arn
-  subnet_ids             = module.networking.private_subnet_ids
-  kubernetes_version     = var.kubernetes_version
-  endpoint_public_access = var.eks_endpoint_public_access
-  public_access_cidrs    = var.eks_public_access_cidrs
-  https_egress_cidrs     = var.eks_https_egress_cidrs
-  node_instance_types    = var.eks_node_instance_types
-  node_group_name        = var.eks_node_group_name
-  desired_size           = var.eks_desired_size
-  min_size               = var.eks_min_size
-  max_size               = var.eks_max_size
-  tags                   = local.common_tags
+  cluster_name                 = "${local.name_prefix}-eks"
+  cluster_role_arn             = local.eks_cluster_role_arn
+  node_role_arn                = local.eks_node_role_arn
+  subnet_ids                   = module.networking.private_subnet_ids
+  kubernetes_version           = var.kubernetes_version
+  endpoint_public_access       = var.eks_endpoint_public_access
+  public_access_cidrs          = var.eks_public_access_cidrs
+  cluster_admin_principal_arns = var.eks_cluster_admin_principal_arns
+  https_egress_cidrs           = var.eks_https_egress_cidrs
+  node_instance_types          = var.eks_node_instance_types
+  node_group_name              = var.eks_node_group_name
+  desired_size                 = var.eks_desired_size
+  min_size                     = var.eks_min_size
+  max_size                     = var.eks_max_size
+  tags                         = local.common_tags
 
   depends_on = [terraform_data.profile_guardrail, module.eks_iam]
 }

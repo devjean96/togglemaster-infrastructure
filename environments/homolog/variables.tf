@@ -60,6 +60,13 @@ variable "eks_public_access_cidrs" {
     error_message = "Informe pelo menos um CIDR para acesso ao endpoint do EKS."
   }
 }
+
+variable "eks_cluster_admin_principal_arns" {
+  description = "IAM principals authorized as EKS cluster administrators."
+  type        = set(string)
+  default     = []
+}
+
 variable "eks_https_egress_cidrs" {
   description = "CIDRs autorizados como destino da saida TCP/443 dos nodes EKS."
   type        = list(string)

@@ -35,6 +35,13 @@ variable "public_access_cidrs" {
     error_message = "Informe pelo menos um CIDR para acesso ao endpoint do EKS."
   }
 }
+
+variable "cluster_admin_principal_arns" {
+  description = "IAM principals authorized as cluster administrators through EKS access entries."
+  type        = set(string)
+  default     = []
+}
+
 variable "https_egress_cidrs" {
   description = "CIDRs de destino autorizados para saida HTTPS dos nodes EKS. Endpoints SaaS podem alterar seus IPs, portanto o padrao libera somente TCP/443 para a Internet."
   type        = list(string)
